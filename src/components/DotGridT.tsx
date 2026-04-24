@@ -18,7 +18,8 @@ const DotGridT = () => {
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
     let dots: { x: number; y: number; inT: boolean; phase: number }[] = [];
     let raf = 0;
-    const spacing = 22;
+    let isVisible = true;
+    const spacing = 26;
 
     const buildDots = () => {
       dots = [];
@@ -78,14 +79,17 @@ const DotGridT = () => {
     };
 
     const draw = (t: number) => {
+      if (!isVisible) return;
       ctx.clearRect(0, 0, width, height);
       const time = t / 1000;
+      const influenceRadius = 180;
+      const influenceRadiusSq = influenceRadius * influenceRadius;
 
       for (const d of dots) {
         const dx = d.x - mouseX;
         const dy = d.y - mouseY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const mouseInfluence = Math.max(0, 1 - dist / 180);
+        const distSq = dx * dx + dy * dy;
+        const mouseInfluence = Math.max(0, 1 - distSq / influenceRadiusSq);
 
         if (d.inT) {
           const pulse = 0.55 + 0.45 * Math.sin(time * 1.6 + d.phase);
@@ -120,10 +124,26 @@ const DotGridT = () => {
     window.addEventListener("resize", resize);
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseleave", onLeave);
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        isVisible = entry.isIntersecting;
+        if (isVisible && !raf) {
+          raf = requestAnimationFrame(draw);
+        } else if (!isVisible && raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+      },
+      { threshold: 0.01 }
+    );
+    io.observe(canvas);
     raf = requestAnimationFrame(draw);
 
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
