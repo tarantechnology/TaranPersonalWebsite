@@ -1,38 +1,56 @@
 const entries = [
   {
-    range: "2023 — Present",
-    role: "Senior Software Engineer",
-    company: "Independent / Consulting",
-    body: "Designing and shipping distributed systems for early-stage teams. Focus on infrastructure that scales without becoming legend.",
+    range: "May 2026 — Aug 2026",
+    role: "Incoming Machine Learning Engineer Intern",
+    company: "Snap Inc. · Palo Alto, CA",
+    body: "Summer 2026 👻",
   },
   {
-    range: "2021 — 2023",
-    role: "Full-Stack Engineer",
-    company: "Series-B SaaS Startup",
-    body: "Owned customer-facing platform end to end. Cut p95 latency by 62%, rewrote the billing pipeline, mentored four engineers into seniors.",
+    range: "2024 — Present",
+    role: "Co-Founder",
+    company: "Tabl · AI CAD Generation",
+    body: "Text-to-CAD solved.",
   },
   {
-    range: "2020 — Present",
-    role: "Tech Content Creator",
-    company: "YouTube · Twitter · Newsletter",
-    body: "Built an audience of 400K+ around system design, algorithms, and the parts of CS no one bothered to explain properly.",
+    range: "Sep 2024 — Present",
+    role: "Lead Undergraduate Researcher",
+    company: "Georgia Tech CHART Lab · Atlanta, GA",
+    body: "Building real-time ML pipelines that make technical cross-collaboration way less painful.",
   },
   {
-    range: "2016 — 2020",
-    role: "B.Tech, Computer Science",
-    company: "University",
-    body: "Graduated with distinction. Spent the four years half in the library, half in the terminal.",
+    range: "Jul 2025 — Sep 2025",
+    role: "Software Engineer Intern",
+    company: "Pally (YC S25) · San Francisco, CA",
+    body: "$1.1M pre-seed; worked across full-stack, backend, infrastructure, and search - whatever my name was next to on the whiteboard.",
+  },
+  {
+    range: "May 2025 — Jul 2025",
+    role: "Software Development Engineer Intern",
+    company: "Georgia Tech Research Institute · Huntsville, AL",
+    body: "Performance testing suite for Air & Missile defense division.",
+  },
+  {
+    range: "May 2023 — Sep 2023",
+    role: "Research Intern",
+    company: " Wolfpack Security and Privacy Research (WSPR) lab · Raleigh, NC",
+    body: "Analyzed 250k+ virtual reality privacy concerns. Under Dr. Anupam Das.",
+  },
+  {
+    range: "June 2022 — Nov 2023",
+    role: "Research Intern",
+    company: "University of North Carolina at Wilmington · Wilmington, NC",
+    body: "Novel method to detect Atrial Fibrillation in real-time. Under Dr. Cuxian Chen & Dr. Yishi Wang.",
   },
 ];
 
 const Experience = () => {
   return (
-    <section id="experience" className="relative py-32 md:py-40 bg-background">
+    <section id="experience" className="relative py-24 md:py-28 bg-background">
       <div className="container">
         <div className="reveal max-w-3xl">
           <p className="label-mono">// 02 — Experience</p>
           <h2 className="mt-6 font-serif font-light text-5xl md:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-            A timeline, <span className="italic text-primary">honestly</span> told.
+            Past & <span className="italic text-primary">Present</span> 
           </h2>
         </div>
 
@@ -46,7 +64,7 @@ const Experience = () => {
 
           {entries.map((e, i) => (
             <li
-              key={e.role}
+              key={`${e.role}-${e.range}`}
               className="reveal-left relative pl-12 md:pl-20 pb-16 last:pb-0"
               style={{ transitionDelay: `${i * 100}ms` }}
             >

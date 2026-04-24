@@ -1,26 +1,21 @@
 const Footer = () => {
   return (
-    <footer className="relative border-t border-border bg-background overflow-hidden">
-      {/* Giant faint T */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-serif text-[28rem] leading-none text-primary/[0.04] select-none"
-      >
-        T
-      </span>
-
-      <div className="container relative grid grid-cols-1 md:grid-cols-3 items-center gap-6 py-10">
+    <footer className="relative bg-background overflow-hidden">
+      <div className="container relative grid grid-cols-1 md:grid-cols-3 items-center gap-6 py-8">
         <p className="font-mono text-xs tracking-[0.2em] uppercase text-muted-foreground text-center md:text-left">
           © {new Date().getFullYear()} Taran
         </p>
 
-        <div className="text-center font-serif text-2xl">
-          <span className="text-primary">T</span>
-          <span className="text-foreground/60">aran</span>
-        </div>
+        <a href="#top" className="flex justify-center" aria-label="TaranTech home">
+          <img
+            src="/tarantech-logo-cropped.png"
+            alt="TaranTech"
+            className="h-9 w-auto object-contain opacity-90"
+          />
+        </a>
 
         <p className="font-mono text-xs tracking-[0.22em] uppercase text-muted-foreground text-center md:text-right">
-          Think · Teach · Transform
+          thanks for looking this far down
         </p>
       </div>
     </footer>

@@ -32,24 +32,25 @@ const Hero = () => {
             className="label-mono opacity-0 animate-fade-up"
             style={{ animationDelay: "0.2s" }}
           >
-            // CS Engineer · Content Creator · Builder
+            // Software Engineer · Content Creator · Builder
           </p>
 
           <h1
-            className="mt-6 font-serif font-light leading-[0.85] text-[clamp(5rem,18vw,18rem)] tracking-[-0.04em] opacity-0 animate-fade-up"
+            className="mt-6 font-serif italic font-light leading-[0.85] text-[clamp(5rem,18vw,18rem)] tracking-[-0.04em] opacity-0 animate-fade-up"
             style={{ animationDelay: "0.5s" }}
           >
-            <span className="red-underline-T text-primary">T</span>
-            <span>ARAN</span>
+            <span className="inline-flex items-baseline gap-[0.18em]">
+              <span>I'm</span>
+            </span>{" "}
+            <span className="text-primary">Taran</span>
           </h1>
 
           <p
-            className="mt-8 font-serif italic text-2xl md:text-3xl lg:text-4xl text-foreground/90 max-w-3xl text-balance opacity-0 animate-fade-up"
+            className="mt-8 font-serif italic text-2l md:text-3xl lg:text-4xl text-foreground/90 max-w-3xl text-balance opacity-0 animate-fade-up"
             style={{ animationDelay: "0.9s" }}
           >
-            Engineering elegant systems —
+            I like to build & create.
             <br className="hidden sm:block" />
-            and teaching the world how they work.
           </p>
 
           <div
@@ -58,9 +59,9 @@ const Hero = () => {
           >
             <Stat value="400K+" label="Followers" />
             <Divider />
-            <Stat value="5+" label="Years Experience" />
+            <Stat value="3+" label="Years Experience" />
             <Divider />
-            <Stat value="20+" label="Projects Shipped" />
+            <Stat value="10+" label="Projects Shipped" />
           </div>
         </div>
 

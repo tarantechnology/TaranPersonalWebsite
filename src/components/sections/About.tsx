@@ -1,80 +1,37 @@
+import { Play } from "lucide-react";
+
 const skills = [
-  "TypeScript", "Go", "Rust", "Python",
-  "Distributed Systems", "Postgres", "Kubernetes",
-  "React", "Node", "System Design", "LLMs",
+  "Swift/SwiftUI", "Java", "Python", "C/C++", "C#",
+  "Go", "JavaScript", "TypeScript", "SQL", "Bash", "CUDA",
+  "PyTorch", "TensorFlow", "JAX", "scikit-learn",
+  "React", "FastAPI", "LangChain", "Tauri",
+  "PostgreSQL", "MongoDB", "Snowflake", "Neo4j",
+  "Docker", "Kubernetes", "AWS", "GCP", "Azure", "Linux",
 ];
-
-const TSculpture = () => {
-  // CSS sculpture of a T from bordered rectangles + glowing red corner dots
-  return (
-    <div className="relative aspect-square w-full max-w-md mx-auto" aria-hidden>
-      {/* Crossbar */}
-      <div className="absolute left-[8%] right-[8%] top-[12%] h-[22%] border border-border bg-gradient-to-br from-primary/[0.06] to-transparent">
-        <Corner pos="tl" />
-        <Corner pos="tr" />
-        <Corner pos="bl" />
-        <Corner pos="br" />
-      </div>
-      {/* Stem */}
-      <div className="absolute left-1/2 top-[34%] h-[58%] w-[22%] -translate-x-1/2 border border-border bg-gradient-to-b from-primary/[0.04] to-transparent">
-        <Corner pos="tl" />
-        <Corner pos="tr" />
-        <Corner pos="bl" />
-        <Corner pos="br" />
-      </div>
-      {/* Faint giant T behind */}
-      <span className="absolute inset-0 flex items-center justify-center font-serif text-[22rem] leading-none text-primary/[0.05] select-none pointer-events-none">
-        T
-      </span>
-    </div>
-  );
-};
-
-const Corner = ({ pos }: { pos: "tl" | "tr" | "bl" | "br" }) => {
-  const map = {
-    tl: "-top-1 -left-1",
-    tr: "-top-1 -right-1",
-    bl: "-bottom-1 -left-1",
-    br: "-bottom-1 -right-1",
-  } as const;
-  return (
-    <span
-      className={`absolute h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))] animate-pulse-glow ${map[pos]}`}
-    />
-  );
-};
 
 const About = () => {
   return (
-    <section id="about" className="relative py-32 md:py-40 bg-noise">
+    <section id="about" className="relative py-24 md:py-28 bg-noise">
       <div className="container grid gap-16 md:gap-24 lg:grid-cols-12 items-start">
         <div className="lg:col-span-7 reveal">
           <p className="label-mono">// 01 — About</p>
           <h2 className="mt-6 font-serif font-light text-5xl md:text-6xl lg:text-7xl leading-[0.95] tracking-tight text-balance">
-            A builder who'd rather <span className="italic text-primary">explain</span> the system
-            than gatekeep it.
+             {/* Hey<span className="italic text-primary">!</span>*/}👋
           </h2>
 
           <div className="mt-10 max-w-2xl space-y-6 text-lg text-foreground/80 leading-relaxed">
-            <p>
-              I'm Taran — a computer science engineer who spends one half of his life shipping
-              software and the other half explaining how the machine actually works. Five years in,
-              I've built backends that survive real traffic, debugged things at 3 a.m. that
-              shouldn't have been possible, and turned the lessons into videos watched by
-              <span className="text-foreground"> 400,000+ people</span>.
-            </p>
-            <p>
-              The thread through all of it: <span className="text-foreground">curiosity refined into craft</span>.
-              I don't believe in mystique. I believe in clear thinking, well-named variables, and
-              the kind of writing that respects the reader.
-            </p>
-          </div>
-
-          <blockquote className="mt-12 border-l-2 border-primary pl-6">
-            <p className="font-serif italic text-3xl md:text-4xl text-foreground/95 leading-snug">
-              "Code is craft. Teaching is art."
-            </p>
-          </blockquote>
+  <p>
+    I'm Taran, a computer science student at Georgia Tech who got into tech an unconventional way.
+    I spent years obsessing over hardware, software, and why some products just felt better to use than others.
+    That turned into making videos on TikTok and YouTube, where I built a community of
+    <span className="text-foreground"> 400,000+ people</span>.
+  </p>
+  <p>
+    Now I’m more interested in building than reviewing. I spend most of my time working on
+    <span className="text-foreground"> AI systems, useful software, and products people actually come back to daily</span>.
+    Same curiosity, different output.
+  </p>
+</div>
 
           <div className="mt-12">
             <p className="label-mono mb-4">// Stack & interests</p>
@@ -88,9 +45,26 @@ const About = () => {
 
         <div className="lg:col-span-5 reveal" style={{ transitionDelay: "120ms" }}>
           <div className="lg:sticky lg:top-28">
-            <TSculpture />
+            <a
+              href="https://www.youtube.com/watch?v=NE1GqwGmSwE"
+              target="_blank"
+              rel="noreferrer"
+              className="group relative block rounded-md border border-primary/60 p-1 transition-colors duration-300 hover:border-primary"
+              data-cursor-hover
+            >
+              <img
+                src="/youtube-feature-thumb.png"
+                alt="YouTube video thumbnail"
+                className="w-full rounded-sm border border-border object-cover transition-transform duration-500 group-hover:scale-[1.01]"
+              />
+              <span className="pointer-events-none absolute inset-0 rounded-md ring-1 ring-primary/40 ring-inset" />
+              <span className="pointer-events-none absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-primary bg-background/70 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-primary backdrop-blur">
+                <Play className="h-3 w-3 fill-current" />
+                Watch
+              </span>
+            </a>
             <p className="mt-10 text-center font-serif italic text-2xl md:text-3xl text-foreground/90">
-              Think. <span className="text-primary not-italic">·</span> Teach. <span className="text-primary not-italic">·</span> Transform.
+              Day One
             </p>
           </div>
         </div>

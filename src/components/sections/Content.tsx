@@ -1,38 +1,56 @@
 import { Play } from "lucide-react";
 
 const videos = [
-  { views: "2.4M", title: "How databases really work — from disk to query plan", featured: true },
-  { views: "890K", title: "The CAP theorem, properly explained" },
-  { views: "640K", title: "Building a load balancer in 200 lines of Go" },
-  { views: "412K", title: "Why your indexes are slower than you think" },
-  { views: "1.1M", title: "A practical guide to system design interviews" },
+  {
+    views: "7.3M",
+    title: "The Tank PC...",
+    href: "https://www.tiktok.com/@tarantech/video/7171166357948468526?is_from_webapp=1&sender_device=pc&web_id=7601218732539741710",
+    thumbnail: "/tiktok-thumbs/7171166357948468526.jpg",
+  },
+  {
+    views: "250K+",
+    title: "In partnership with @TikTok",
+    href: "https://www.tiktok.com/@tarantech/video/7042403432635845934",
+    thumbnail: "/tiktok-thumbs/7042403432635845934.jpg",
+  },
+  {
+    views: "1.2M",
+    title: "Solid gaming experience overall (sponsored by @NZXT)",
+    href: "https://www.tiktok.com/@tarantech/video/7170008975004519723",
+    thumbnail: "/tiktok-thumbs/7170008975004519723.jpg",
+  },
+  {
+    views: "851K",
+    title: "Latest gaming deals for Intel Gamer Days (sponsored by @Intel Gaming)",
+    href: "https://www.tiktok.com/@tarantech/video/7135925927522979115",
+    thumbnail: "/tiktok-thumbs/7135925927522979115.jpg",
+  },
 ];
 
 const Content = () => {
   return (
-    <section id="content" className="relative py-32 md:py-40 bg-surface">
+    <section id="content" className="relative py-24 md:py-28 bg-background">
       <div className="container">
         <div className="reveal max-w-4xl flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div>
             <p className="label-mono">// 04 — Content</p>
             <h2 className="mt-6 font-serif font-light text-5xl md:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-              Lessons, <span className="italic text-primary">on tape</span>.
+              Where it all <span className="italic text-primary">started</span>.
             </h2>
           </div>
-          <p className="text-foreground/70 max-w-sm text-lg">
-            Long-form videos for engineers who want the whole picture, not the headline.
-          </p>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-px md:bg-border md:[&>*]:bg-surface">
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {videos.map((v, i) => (
-            <VideoCard key={i} {...v} index={i} featured={v.featured} />
+            <VideoCard key={v.href} {...v} index={i} />
           ))}
         </div>
 
         <div className="mt-16 flex justify-center">
           <a
-            href="#"
+            href="https://www.tiktok.com/@tarantech"
+            target="_blank"
+            rel="noreferrer"
             className="group inline-flex items-center gap-3 font-mono text-xs tracking-[0.22em] uppercase border-b border-primary/40 pb-1 transition-colors duration-300 hover:text-primary hover:border-primary"
           >
             View all videos
@@ -45,50 +63,42 @@ const Content = () => {
 };
 
 const VideoCard = ({
-  views, title, index, featured,
-}: { views: string; title: string; index: number; featured?: boolean }) => (
-  <article
-    className={`reveal group relative overflow-hidden ${
-      featured ? "md:row-span-2 md:col-span-1" : ""
-    }`}
+  views, title, href, thumbnail, index,
+}: { views: string; title: string; href: string; thumbnail: string; index: number }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noreferrer"
+    className="reveal group relative overflow-hidden rounded-md border border-border/60 bg-background"
     style={{ transitionDelay: `${index * 80}ms` }}
     data-cursor-hover
   >
-    <div className={`relative ${featured ? "aspect-[3/4] md:aspect-auto md:h-full" : "aspect-video"} bg-background overflow-hidden`}>
-      {/* Hatch placeholder */}
-      <div className="absolute inset-0 hatch-pattern" />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-crimson/30 mix-blend-overlay opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-
-      {/* Big T watermark */}
-      <span className="absolute inset-0 flex items-center justify-center font-serif text-[16rem] leading-none text-foreground/[0.04] select-none">
-        T
-      </span>
-
-      {featured && (
-        <span className="absolute top-4 left-4 font-mono text-[10px] tracking-[0.22em] uppercase border border-primary text-primary px-2 py-1 bg-background/60 backdrop-blur">
-          Featured
-        </span>
-      )}
+    <div className="relative aspect-[9/16] bg-background overflow-hidden">
+      <img
+        src={thumbnail}
+        alt={title}
+        className="absolute inset-0 h-full w-full object-contain bg-background transition-transform duration-500 group-hover:scale-[1.02]"
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-crimson/30 mix-blend-overlay opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/10" />
 
       {/* Play button */}
-      <button
-        type="button"
-        aria-label={`Play: ${title}`}
-        className="absolute right-5 bottom-5 inline-flex h-14 w-14 items-center justify-center rounded-full border border-primary text-primary bg-background/40 backdrop-blur transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110"
+      <span
+        aria-hidden
+        className="absolute right-3 bottom-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary text-primary bg-background/50 backdrop-blur transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110"
       >
-        <Play className="h-5 w-5 fill-current" />
-      </button>
+        <Play className="h-4 w-4 fill-current" />
+      </span>
 
       {/* Bottom info overlay */}
-      <div className="absolute inset-x-5 bottom-5 right-24">
-        <p className="font-mono text-xs tracking-[0.18em] uppercase text-primary">{views} views</p>
-        <h3 className={`mt-2 font-serif font-light leading-tight text-foreground ${featured ? "text-2xl md:text-3xl" : "text-xl"}`}>
+      <div className="absolute inset-x-3 bottom-3 pr-12">
+        <p className="font-mono text-[10px] tracking-[0.16em] uppercase text-primary">{views} views</p>
+        <h3 className="mt-1 font-serif font-light leading-tight text-foreground text-sm md:text-base line-clamp-3">
           {title}
         </h3>
       </div>
     </div>
-  </article>
+  </a>
 );
 
 export default Content;

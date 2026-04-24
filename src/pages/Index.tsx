@@ -2,7 +2,6 @@ import CursorFollower from "@/components/CursorFollower";
 import useReveal from "@/hooks/useReveal";
 import Nav from "@/components/sections/Nav";
 import Hero from "@/components/sections/Hero";
-import Marquee from "@/components/sections/Marquee";
 import About from "@/components/sections/About";
 import Experience from "@/components/sections/Experience";
 import Projects from "@/components/sections/Projects";
@@ -17,7 +16,6 @@ const Index = () => {
       <CursorFollower />
       <Nav />
       <Hero />
-      <Marquee />
       <About />
       <Experience />
       <Projects />

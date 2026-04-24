@@ -29,11 +29,14 @@ const Nav = () => {
       <div className="container flex h-16 items-center justify-between">
         <a
           href="#top"
-          className="font-serif text-2xl tracking-tight transition-transform duration-300 hover:-translate-y-0.5"
+          className="transition-transform duration-300 hover:-translate-y-0.5"
           aria-label="Taran — home"
         >
-          <span className="text-primary inline-block transition-transform duration-300 hover:scale-125">T</span>
-          <span>aran</span>
+          <img
+            src="/tarantech-logo-cropped.png"
+            alt="TaranTech"
+            className="h-10 w-auto object-contain opacity-90"
+          />
         </a>
         <ul className="hidden md:flex items-center gap-8">
           {links.map((l) => (

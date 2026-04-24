@@ -1,16 +1,17 @@
 import { ArrowRight } from "lucide-react";
 
 const links = [
-  { label: "Email", value: "hello@taran.dev", href: "mailto:hello@taran.dev" },
-  { label: "Twitter", value: "@taran", href: "https://twitter.com" },
-  { label: "YouTube", value: "youtube.com/@taran", href: "https://youtube.com" },
-  { label: "LinkedIn", value: "in/taran", href: "https://linkedin.com" },
-  { label: "GitHub", value: "github.com/taran", href: "https://github.com" },
+  { label: "Email", value: "tpuvvala@gatech.edu", href: "mailto:tpuvvala@gatech.edu" },
+  { label: "X", value: "@taran_tech", href: "https://x.com/taran_tech" },
+  { label: "YouTube", value: "@tarantech", href: "https://www.youtube.com/tarantech" },
+  { label: "LinkedIn", value: "in/taran-puvvala", href: "https://www.linkedin.com/in/taran-puvvala-747607289/" },
+  { label: "GitHub", value: "@tarantechnology", href: "https://github.com/tarantechnology" },
+  { label: "TikTok", value: "@tarantech", href: "https://www.tiktok.com/@tarantech" },
 ];
 
 const Contact = () => {
   return (
-    <section id="contact" className="relative py-32 md:py-44">
+    <section id="contact" className="relative py-24 md:py-28">
       <div className="container grid gap-16 lg:grid-cols-12 items-start">
         <div className="lg:col-span-6 reveal">
           <p className="label-mono">// 05 — Contact</p>
