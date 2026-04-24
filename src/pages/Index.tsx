@@ -1,13 +1,15 @@
+import { lazy, Suspense } from "react";
 import CursorFollower from "@/components/CursorFollower";
 import useReveal from "@/hooks/useReveal";
 import Nav from "@/components/sections/Nav";
 import Hero from "@/components/sections/Hero";
-import About from "@/components/sections/About";
-import Experience from "@/components/sections/Experience";
-import Projects from "@/components/sections/Projects";
-import Content from "@/components/sections/Content";
-import Contact from "@/components/sections/Contact";
-import Footer from "@/components/sections/Footer";
+
+const About = lazy(() => import("@/components/sections/About"));
+const Experience = lazy(() => import("@/components/sections/Experience"));
+const Projects = lazy(() => import("@/components/sections/Projects"));
+const Content = lazy(() => import("@/components/sections/Content"));
+const Contact = lazy(() => import("@/components/sections/Contact"));
+const Footer = lazy(() => import("@/components/sections/Footer"));
 
 const Index = () => {
   useReveal();
@@ -16,12 +18,14 @@ const Index = () => {
       <CursorFollower />
       <Nav />
       <Hero />
-      <About />
-      <Experience />
-      <Projects />
-      <Content />
-      <Contact />
-      <Footer />
+      <Suspense fallback={null}>
+        <About />
+        <Experience />
+        <Projects />
+        <Content />
+        <Contact />
+        <Footer />
+      </Suspense>
     </main>
   );
 };
