@@ -12,14 +12,17 @@ const DotGridT = () => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
+    const isLowPowerDevice = prefersReducedMotion || navigator.hardwareConcurrency <= 4 || deviceMemory <= 4;
 
     let width = 0;
     let height = 0;
-    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let dpr = Math.min(window.devicePixelRatio || 1, isLowPowerDevice ? 1 : 1.5);
     let dots: { x: number; y: number; inT: boolean; phase: number }[] = [];
     let raf = 0;
     let isVisible = true;
-    const spacing = 26;
+    const spacing = isLowPowerDevice ? 34 : 28;
 
     const buildDots = () => {
       dots = [];
@@ -78,11 +81,19 @@ const DotGridT = () => {
       mouseY = -9999;
     };
 
+    let lastFrame = 0;
+    const targetFrameMs = isLowPowerDevice ? 50 : 33;
+
     const draw = (t: number) => {
       if (!isVisible) return;
+      if (t - lastFrame < targetFrameMs) {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
+      lastFrame = t;
       ctx.clearRect(0, 0, width, height);
       const time = t / 1000;
-      const influenceRadius = 180;
+      const influenceRadius = isLowPowerDevice ? 130 : 180;
       const influenceRadiusSq = influenceRadius * influenceRadius;
 
       for (const d of dots) {
@@ -94,13 +105,13 @@ const DotGridT = () => {
         if (d.inT) {
           const pulse = 0.55 + 0.45 * Math.sin(time * 1.6 + d.phase);
           const alpha = 0.35 + pulse * 0.55 + mouseInfluence * 0.4;
-          const radius = 1.1 + pulse * 1.0 + mouseInfluence * 1.6;
+          const radius = 1 + pulse * 0.8 + mouseInfluence * 1.4;
           // crimson #e74c3c => approx 231,76,60
           ctx.fillStyle = `rgba(231, 76, 60, ${Math.min(alpha, 1)})`;
           ctx.beginPath();
           ctx.arc(d.x, d.y, radius, 0, Math.PI * 2);
           ctx.fill();
-          if (pulse > 0.85) {
+          if (!isLowPowerDevice && pulse > 0.9) {
             ctx.fillStyle = `rgba(231, 76, 60, ${0.12 * pulse})`;
             ctx.beginPath();
             ctx.arc(d.x, d.y, radius * 3, 0, Math.PI * 2);

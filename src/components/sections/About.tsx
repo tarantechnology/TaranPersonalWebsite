@@ -56,6 +56,8 @@ const About = () => {
                 src="/youtube-feature-thumb.png"
                 alt="YouTube video thumbnail"
                 className="w-full rounded-sm border border-border object-cover transition-transform duration-500 group-hover:scale-[1.01]"
+                loading="lazy"
+                decoding="async"
               />
               <span className="pointer-events-none absolute inset-0 rounded-md ring-1 ring-primary/40 ring-inset" />
               <span className="pointer-events-none absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-primary bg-background/70 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-primary backdrop-blur">

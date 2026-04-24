@@ -9,7 +9,10 @@ const CursorFollower = () => {
   const ringRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (window.matchMedia("(pointer: coarse)").matches) return;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
+    const isLowPowerDevice = prefersReducedMotion || navigator.hardwareConcurrency <= 4 || deviceMemory <= 4;
+    if (window.matchMedia("(pointer: coarse)").matches || isLowPowerDevice) return;
 
     const dot = dotRef.current;
     const ring = ringRef.current;

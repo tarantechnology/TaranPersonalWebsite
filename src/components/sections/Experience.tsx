@@ -9,7 +9,7 @@ const entries = [
     range: "2024 — Present",
     role: "Co-Founder",
     company: "Tabl · AI CAD Generation",
-    body: "Text-to-CAD solved.",
+    body: "Text-to-CAD solved. Backed by Christopher Klaus.",
   },
   {
     range: "Sep 2024 — Present",

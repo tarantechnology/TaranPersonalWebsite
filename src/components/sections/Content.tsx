@@ -78,6 +78,8 @@ const VideoCard = ({
         src={thumbnail}
         alt={title}
         className="absolute inset-0 h-full w-full object-contain bg-background transition-transform duration-500 group-hover:scale-[1.02]"
+        loading="lazy"
+        decoding="async"
       />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-crimson/30 mix-blend-overlay opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/10" />

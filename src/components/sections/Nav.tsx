@@ -20,9 +20,9 @@ const Nav = () => {
 
   return (
     <nav
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
         scrolled
-          ? "bg-background/70 backdrop-blur-xl border-b border-primary/40"
+          ? "bg-background/92 border-b border-primary/30"
           : "bg-transparent border-b border-transparent"
       }`}
     >
