@@ -1,105 +1,59 @@
 import { ArrowUpRight } from "lucide-react";
+import { Reveal, Words } from "@/components/drive/Reveal";
 
 const projects = [
-  {
-    n: "01",
-    title: "Network Traffic Forecasting with Multi-Layer LSTMs",
-    body: "Built an end-to-end time-series forecasting pipeline on 500K+ rows and improved model error by 14.9% with distributed stacked LSTMs.",
-    tags: ["Python", "TensorFlow", "JAX", "Pandas"],
-    href: "https://morgantonscientific.ncssm.edu/articles/TUVN1118",
-  },
-  {
-    n: "02",
-    title: "AI-Driven Financial Market Anomaly Detector",
-    body: "Trained an XGBoost-based anomaly detector on 1M+ market datapoints and built an end-to-end inference pipeline with PCA, RFE, and deployment via Next.js.",
-    tags: ["Python", "XGBoost", "scikit-learn", "Next.js"],
-    href: "https://github.com/tarantechnology/MarketAnomalyDetection",
-  },
-  {
-    n: "03",
-    title: "Tabl - AI CAD Generation Software",
-    body: "Shipped a containerized text-to-CAD pipeline supporting 500+ concurrent generations and a multi-stage RAG system over 15K+ CAD docs.",
-    tags: ["React", "AWS", "TypeScript", "Redis", "Three.js"],
-    href: "https://www.trytabl.ai/",
-  },
-  {
-    n: "04",
-    title: "AI Executive Assistant Agent (HackMIT)",
-    body: "Built an iMessage-accessible GPT agent with LangChain orchestration and per-user knowledge graphs from Gmail, Outlook, and Notion data.",
-    tags: ["TypeScript", "Python", "LangChain", "MCP", "Neo4j"],
-    href: "https://github.com/ProdText",
-  },
-  {
-    n: "05",
-    title: "MacTrack - AI Meal & Macro Tracker (HackGT)",
-    body: "Built a React Native app that scans meals with GPT-4o and a Flask + MongoDB backend for fast nutrition logging and sync.",
-    tags: ["React Native", "Flask", "MongoDB", "Python", "GPT-4o"],
-    href: "https://github.com/tarantechnology/mactrack",
-  },
-  {
-    n: "06",
-    title: "More Projects",
-    body: "More shipped work across ML, infra, and product engineering lives on my GitHub.",
-    tags: ["GitHub", "Open Source", "AI", "Systems"],
-    href: "https://github.com/tarantechnology",
-  },
+  { n: "01", meta: "2022", title: "Network traffic forecasting with multi-layer LSTMs", body: "End-to-end time-series pipeline on 500K+ rows; improved model error by 14.9% with distributed stacked LSTMs.", tags: ["Python", "TensorFlow", "JAX"], href: "https://morgantonscientific.ncssm.edu/articles/TUVN1118" },
+  { n: "02", meta: "", title: "AI-driven financial market anomaly detector", body: "XGBoost detector on 1M+ market datapoints with a PCA and RFE inference pipeline, deployed via Next.js.", tags: ["XGBoost", "scikit-learn", "Next.js"], href: "https://github.com/tarantechnology/MarketAnomalyDetection" },
+  { n: "03", meta: "In focus", title: "Tabl, AI CAD generation", body: "Containerized text-to-CAD pipeline for 500+ concurrent generations and a multi-stage RAG system over 15K+ CAD docs.", tags: ["React", "AWS", "Three.js"], href: "https://www.trytabl.ai/", focus: true },
+  { n: "04", meta: "HackMIT", title: "AI executive assistant agent", body: "iMessage-accessible GPT agent with LangChain orchestration and per-user knowledge graphs from Gmail, Outlook and Notion.", tags: ["LangChain", "MCP", "Neo4j"], href: "https://github.com/ProdText" },
+  { n: "05", meta: "HackGT", title: "MacTrack, AI meal & macro tracker", body: "React Native app that scans meals with GPT-4o, on a Flask and MongoDB backend for fast logging and sync.", tags: ["React Native", "Flask", "GPT-4o"], href: "https://github.com/tarantechnology/mactrack" },
+  { n: "06", meta: "Unexposed", title: "More on the roll.", body: "More shipped work across ML, infra and product lives on GitHub.", tags: ["@tarantechnology"], href: "https://github.com/tarantechnology", more: true },
 ];
 
 const Projects = () => {
   return (
-    <section id="projects" className="relative py-24 md:py-28">
+    <section id="projects" data-drive data-sky="day" data-theme="light" data-label="Projects" data-clock="13:05" className="relative min-h-screen pb-24 pt-32 text-hud">
       <div className="container">
-        <div className="reveal max-w-4xl flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="label-mono">// 03 — Selected work</p>
-            <h2 className="mt-6 font-serif font-light text-5xl md:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-              Projects, <span className="italic text-primary">open-source</span> (mostly).
+            <Reveal as="p" className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary">{"// 03 — Selected work · 13:05"}</Reveal>
+            <h2 className="mt-6 font-serif text-5xl font-light leading-[0.95] tracking-tight md:text-6xl lg:text-7xl">
+              <Words text="Projects, open-source (mostly)." accent="open-source" />
             </h2>
           </div>
+          <Reveal as="p" delay={0.2} className="max-w-sm text-hud/75">
+            A contact sheet. Every project is a frame on the roll. Hover one to pull it into focus.
+          </Reveal>
         </div>
 
-        <div
-          className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-primary/30"
-          style={{ gap: "1px" }}
-        >
+        <ul className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((p, i) => (
-            <ProjectCard key={p.n} {...p} delay={i * 80} />
+            <Reveal as="li" key={p.n} delay={i * 0.07} y={36}>
+              <a
+                href={p.href}
+                target="_blank"
+                rel="noreferrer"
+                className={`holo group relative flex h-full flex-col gap-3.5 p-6 transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-1.5 ${p.focus ? "holo--accent" : ""}`}
+                data-cursor-hover
+              >
+                <span className={`font-mono text-[10px] uppercase tracking-[0.2em] ${p.focus ? "text-primary" : "text-hud/60"}`}>Frame {p.n}{p.meta ? ` · ${p.meta}` : ""}</span>
+                <h3 className={`font-serif font-light leading-[1.05] transition-colors duration-300 group-hover:text-primary ${p.more ? "text-4xl italic" : "text-[27px]"} ${p.focus ? "text-primary" : ""}`}>{p.title}</h3>
+                <p className="flex-1 text-sm leading-relaxed text-hud/75">{p.body}</p>
+                <ul className="flex flex-wrap gap-1.5">
+                  {p.tags.map((t) => (
+                    <li key={t} className="holo-chip">{t}</li>
+                  ))}
+                </ul>
+                <span className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary/60 text-primary transition-all duration-300 group-hover:rotate-45 group-hover:bg-primary group-hover:text-primary-foreground">
+                  <ArrowUpRight className="h-4 w-4" />
+                </span>
+              </a>
+            </Reveal>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );
 };
-
-const ProjectCard = ({
-  n, title, body, tags, href, delay,
-}: { n: string; title: string; body: string; tags: string[]; href: string; delay: number }) => (
-  <a
-    href={href}
-    target="_blank"
-    rel="noreferrer"
-    className="reveal group relative bg-background p-8 md:p-10 min-h-[320px] flex flex-col transition-all duration-500 hover:bg-surface"
-    style={{ transitionDelay: `${delay}ms` }}
-    data-cursor-hover
-  >
-    <p className="font-mono text-xs tracking-[0.2em] uppercase text-muted-foreground">// {n}</p>
-    <h3 className="mt-6 font-serif font-light text-3xl md:text-4xl leading-tight transition-colors duration-300 group-hover:text-primary">
-      {title}
-    </h3>
-    <p className="mt-4 text-foreground/70 leading-relaxed flex-1">{body}</p>
-    <div className="mt-6 flex flex-wrap gap-2">
-      {tags.map((t) => (
-        <span key={t} className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted-foreground border border-border px-2 py-1">
-          {t}
-        </span>
-      ))}
-    </div>
-    <span className="absolute right-6 top-6 inline-flex h-11 w-11 items-center justify-center rounded-full border border-primary/60 text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:rotate-45">
-      <ArrowUpRight className="h-5 w-5" />
-    </span>
-    {/* lift effect */}
-    <span className="pointer-events-none absolute inset-0 transition-transform duration-500 group-hover:-translate-y-1" />
-  </a>
-);
 
 export default Projects;

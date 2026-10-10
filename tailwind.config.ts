@@ -19,6 +19,12 @@ export default {
         mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       colors: {
+        paper: { DEFAULT: "#ffffff", warm: "#f4f1ea" },
+        ink: { DEFAULT: "#080808", soft: "#3d3a35" },
+        "muted-light": "#6b665d",
+        "hairline-light": "#e3dfd6",
+        tan: { DEFAULT: "#c9a97a", deep: "#a8865a", light: "#d4b588" },
+        hud: "rgb(var(--hud) / <alpha-value>)",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -101,6 +107,12 @@ export default {
           "0%, 100%": { opacity: "0.6", boxShadow: "0 0 8px hsl(var(--primary) / 0.6)" },
           "50%": { opacity: "1", boxShadow: "0 0 20px hsl(var(--primary) / 0.9)" },
         },
+        "scroll-line-x": {
+          "0%": { transform: "scaleX(0)", transformOrigin: "left" },
+          "50%": { transform: "scaleX(1)", transformOrigin: "left" },
+          "51%": { transformOrigin: "right" },
+          "100%": { transform: "scaleX(0)", transformOrigin: "right" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -110,6 +122,7 @@ export default {
         marquee: "marquee 40s linear infinite",
         "scroll-line": "scroll-line 2.4s cubic-bezier(0.76, 0, 0.24, 1) infinite",
         "pulse-glow": "pulse-glow 2.4s ease-in-out infinite",
+        "scroll-line-x": "scroll-line-x 2.4s cubic-bezier(0.76, 0, 0.24, 1) infinite",
       },
     },
   },
