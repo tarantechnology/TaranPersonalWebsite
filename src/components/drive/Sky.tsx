@@ -9,17 +9,31 @@ export const GRADIENTS = {
   night: "linear-gradient(180deg, #080808 0%, #0b0908 100%)",
 } as const;
 
+const KEYS = Object.keys(GRADIENTS) as (keyof typeof GRADIENTS)[];
+
 /** Fixed sky behind the 3D world: four gradients cross-faded by scroll. */
 const Sky = () => {
   const layers = useRef<Record<string, HTMLDivElement | null>>({});
+  const shown = useRef<Record<string, string>>({});
 
   useEffect(() => {
     return onFrame(() => {
       const s = drive.sky;
-      (Object.keys(GRADIENTS) as (keyof typeof GRADIENTS)[]).forEach((k) => {
+      // The layers are stacked, so plain opacity = weight composites as
+      // w1*L1 + (1-w1)*(...) and lets the near-black page background bleed
+      // through mid-blend (a dark dip between dawn and day, and a sky that no
+      // longer matches the fog). Giving layer k the opacity w_k / (w_1 + ... + w_k)
+      // makes the stack composite to exactly sum(w_k * L_k), the same mix the fog uses.
+      let acc = 0;
+      for (const k of KEYS) {
+        const w = s[k];
+        acc += w;
+        const o = acc > 1e-6 ? (w / acc).toFixed(3) : "0.000";
+        if (shown.current[k] === o) continue; // skip style writes when nothing changed
+        shown.current[k] = o;
         const el = layers.current[k];
-        if (el) el.style.opacity = s[k].toFixed(3);
-      });
+        if (el) el.style.opacity = o;
+      }
     });
   }, []);
 

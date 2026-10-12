@@ -18,7 +18,11 @@ export const Reveal = ({ children, as: Tag = "div", className, delay = 0, y = 28
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // no animation, but the inline opacity:0 still has to be lifted
+      el.style.opacity = "1";
+      return;
+    }
     const ctx = gsap.context(() => {
       gsap.fromTo(
         el,
@@ -57,9 +61,10 @@ export const Words = ({ text, className, as: Tag = "span", delay = 0, stagger = 
     const words = el.querySelectorAll<HTMLElement>("[data-word]");
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = gsap.context(() => {
+      // 135%: far enough that no ascender peeks over the (deeper) mask bottom before the reveal
       gsap.fromTo(
         words,
-        { yPercent: 110, rotate: 2 },
+        { yPercent: 135, rotate: 2 },
         { yPercent: 0, rotate: 0, duration: 1.2, delay, stagger, ease: "power4.out", scrollTrigger: { trigger: el, start, once: true } }
       );
     });
@@ -74,7 +79,10 @@ export const Words = ({ text, className, as: Tag = "span", delay = 0, stagger = 
         const clean = w.replace(/[.,!?]/g, "").toLowerCase();
         const isAccent = accent && clean === accent.toLowerCase();
         return (
-          <span key={i} aria-hidden className="inline-block overflow-hidden align-baseline pb-[0.08em] -mb-[0.08em]">
+          // the mask is padded (and the padding cancelled by negative margins, so layout is
+          // unchanged) because with the tight 0.85 leading the line box ends above the
+          // descenders: 0.08em clipped g/p/y and commas, and italic overhang on the right
+          <span key={i} aria-hidden className="-mb-[0.24em] -mr-[0.08em] -mt-[0.06em] inline-block overflow-hidden pb-[0.24em] pr-[0.08em] pt-[0.06em] align-baseline">
             <span data-word className={`inline-block will-change-transform ${isAccent ? "italic text-primary" : ""}`}>
               {w}
             </span>

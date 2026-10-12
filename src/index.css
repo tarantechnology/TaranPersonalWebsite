@@ -210,16 +210,20 @@
   .holo-chip:hover { color: rgb(var(--hud)); border-color: hsl(var(--primary) / 0.7); }
   .holo-chip--accent { color: hsl(var(--primary)); border-color: hsl(var(--primary)); }
 
-  /* Road signs rendered inside the 3D world */
+  /* Road signs rendered inside the 3D world (drei <Html transform>, opacity driven per frame).
+     No backdrop-filter: inside a preserve-3d / matrix3d context it flickers (Safari) and
+     re-blurs the canvas every frame; a denser fill reads the same. Width is fixed because
+     the sign spacing in WorldScene (SIGN_GAP) is sized for a 300px card at distanceFactor 6.5. */
   .holo-sign {
     display: flex; flex-direction: column; gap: 5px;
     width: 300px; padding: 14px 16px;
     border: 1px solid hsl(var(--primary) / 0.6);
-    background: rgba(8, 8, 8, 0.62);
+    background: rgba(8, 8, 8, 0.78);
     color: #f0ece4;
     box-shadow: 0 0 28px hsl(var(--primary) / 0.25), inset 0 0 0 1px rgba(240,236,228,0.06);
-    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
     font-family: 'JetBrains Mono', monospace;
+    backface-visibility: hidden;
+    transition: none;
   }
   .holo-sign--next { border-color: hsl(var(--primary)); box-shadow: 0 0 40px hsl(var(--primary) / 0.45); }
   .holo-sign__range { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: hsl(var(--primary)); }

@@ -29,9 +29,27 @@ export type SectionMeta = {
   label: string;
   clock: string;
   cam: Cam;
-  /** scroll position (px) where this section is centred in the viewport */
+  /** viewport-centre position (document px) where this section is centred in the viewport */
   center: number;
+  /**
+   * Viewport-centre range (document px) over which the section fills the screen.
+   * The camera and sky hold this section's preset over the whole range, so a tall
+   * section (Experience, 420vh) keeps its camera instead of passing through it.
+   * For sections no taller than the viewport both equal `center`.
+   */
+  holdStart: number;
+  holdEnd: number;
 };
+
+/** Reduced motion / phone / low-memory detection, shared by the engine, the scene and the loader. */
+const detectDevice = () => {
+  if (typeof window === "undefined") return { reduced: false, lite: false };
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const coarse = window.matchMedia("(pointer: coarse)").matches;
+  const mem = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
+  return { reduced, lite: reduced || (coarse && window.innerWidth < 768) || mem <= 2 };
+};
+const device = detectDevice();
 
 export const drive = {
   progress: 0,
@@ -40,18 +58,21 @@ export const drive = {
   /** blend weights for the four sky presets, sum to 1 */
   sky: { dawn: 1, day: 0, golden: 0, night: 0 } as Record<SkyName, number>,
   /** interpolated camera for this frame */
-  cam: { pos: [-9.5, 2.3, 7.5] as [number, number, number], look: [2.5, 0.8, 0] as [number, number, number], fov: 32, orbit: 0 },
+  cam: { pos: [...CAMS.hero.pos] as [number, number, number], look: [...CAMS.hero.look] as [number, number, number], fov: CAMS.hero.fov, orbit: 0 },
   /** road units travelled, and current speed in units/s */
   traveled: 0,
   speed: 12,
-  /** 0..1 through the Experience section (drives the road signs) */
+  /** 0..1 through the Experience section's camera hold (drives the road signs) */
   expProgress: 0,
+  /** the two scenes the camera/sky are between this frame, and how far (0 = all `a`) */
+  blend: { a: "", b: "", t: 0 },
   /** screen-space box of the car in CSS px, written by the 3D scene */
   car: { x: 0, y: 0, w: 0, h: 0, ok: false },
   section: 0,
   sections: [] as SectionMeta[],
-  reducedMotion: false,
-  lite: false,
+  // known at module load: WorldScene and the Loader read these before the engine's effect runs
+  reducedMotion: device.reduced,
+  lite: device.lite,
   booted: false,
 };
 
@@ -79,6 +100,36 @@ export const smoothstep = (t: number) => {
   return x * x * (3 - 2 * x);
 };
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+/** wrap an angle difference into (-PI, PI] so blends take the short way round */
+export const wrapAngle = (a: number) => a - Math.PI * 2 * Math.floor((a + Math.PI) / (Math.PI * 2));
+/** frame-rate independent smoothing factor for a rate in 1/s */
+export const damp = (rate: number, dt: number) => 1 - Math.exp(-rate * dt);
+
+/** weight (0..1) of scene `id` in this frame's camera/sky blend */
+export const sceneWeight = (id: string) => {
+  const { a, b, t } = drive.blend;
+  return (a === id ? 1 - t : 0) + (b === id ? t : 0);
+};
+
+/** Mix a per-sky palette of sRGB triplets by the current sky weights, in sRGB space
+ * (the same space the CSS sky layers cross-fade in), into `out`. */
+export const mixSkyRGB = (set: Record<SkyName, readonly [number, number, number]>, out: [number, number, number]) => {
+  out[0] = out[1] = out[2] = 0;
+  for (const k of SKY_NAMES) {
+    const c = set[k];
+    const w = drive.sky[k];
+    out[0] += c[0] * w;
+    out[1] += c[1] * w;
+    out[2] += c[2] * w;
+  }
+  return out;
+};
+/** "#rrggbb" -> sRGB triplet 0..1 */
+export const hexRGB = (hex: string): [number, number, number] => [
+  parseInt(hex.slice(1, 3), 16) / 255,
+  parseInt(hex.slice(3, 5), 16) / 255,
+  parseInt(hex.slice(5, 7), 16) / 255,
+];
 
 /** Night-ness 0..1, used for headlights, stars and ISO */
 export const nightness = () => drive.sky.night + drive.sky.dawn * 0.55 + drive.sky.golden * 0.35;

@@ -54,6 +54,16 @@ const AXES: Axis[] = ["x", "y", "z"];
 
 type Wheel = { mesh: THREE.Mesh; axis: Axis; radius: number; sign: number };
 
+const TAU = Math.PI * 2;
+/**
+ * Fastest the wheels are allowed to turn, in rad/s. Above roughly half the angle
+ * between two spokes per rendered frame the rim strobes (wagon-wheel effect) and
+ * looks like it spins backwards, which happened as soon as scrolling sped the
+ * road up. 18 rad/s is ~0.3 rad per frame at 60 Hz, about the limit for a
+ * 10-spoke rim, and the cap is in rad/s so it does not depend on refresh rate.
+ */
+const MAX_WHEEL_RATE = 18;
+
 /**
  * The model ships all four tyres (and rims, discs) as single meshes. Split each
  * into four by which quadrant its triangles sit in, re-centre every piece on
@@ -64,7 +74,8 @@ const splitWheels = (root: THREE.Object3D): Wheel[] => {
   const targets: THREE.Mesh[] = [];
   root.traverse((o) => {
     const mesh = o as THREE.Mesh;
-    if (mesh.isMesh && /tire|rim|disk/i.test(mesh.name)) targets.push(mesh);
+    // skip pieces from an earlier split (HMR / remount) so wheels are never cut twice
+    if (mesh.isMesh && /tire|rim|disk/i.test(mesh.name) && !/_wheel$/.test(mesh.name)) targets.push(mesh);
   });
 
   targets.forEach((mesh) => {
@@ -112,7 +123,11 @@ const splitWheels = (root: THREE.Object3D): Wheel[] => {
       const radius = extent[a1] / 2;
       const piece = new THREE.Mesh(baked, mesh.material);
       piece.name = `${mesh.name}_wheel`;
-      piece.position.copy(c);
+      // the optimized (quantized) glTF keeps a scale and offset on the mesh node itself;
+      // the hub centre is in the node's local units, so carry the node transform over
+      piece.position.copy(c).multiply(mesh.scale).applyQuaternion(mesh.quaternion).add(mesh.position);
+      piece.quaternion.copy(mesh.quaternion);
+      piece.scale.copy(mesh.scale);
       piece.castShadow = mesh.castShadow;
       piece.receiveShadow = mesh.receiveShadow;
       mesh.parent?.add(piece);
@@ -139,7 +154,8 @@ const CarModel = ({ onLights }: { onLights?: (l: THREE.MeshStandardMaterial[]) =
   useLayoutEffect(() => {
     const lights = applyPoLook(clone);
     onLights?.(lights);
-    wheels.current = splitWheels(clone);
+    const list = splitWheels(clone);
+    wheels.current = list;
     const g = inner.current!;
     const box = new THREE.Box3().setFromObject(clone);
     const size = box.getSize(new THREE.Vector3());
@@ -150,6 +166,8 @@ const CarModel = ({ onLights }: { onLights?: (l: THREE.MeshStandardMaterial[]) =
     const b2 = new THREE.Box3().setFromObject(g);
     const c = b2.getCenter(new THREE.Vector3());
     outer.current!.position.set(-c.x, -b2.min.y, -c.z);
+    // the split pieces own new geometries (matters on HMR / remount)
+    return () => list.forEach((w) => w.mesh.geometry.dispose());
   }, [clone, onLights]);
 
   useFrame((_, dt) => {
@@ -157,7 +175,9 @@ const CarModel = ({ onLights }: { onLights?: (l: THREE.MeshStandardMaterial[]) =
     if (!list.length) return;
     for (const w of list) {
       if (w.sign === 0) {
-        // which way is "forward" for this axle: the direction the top of the wheel moves
+        // which way is "forward" for this axle: a positive turn about axis a moves the
+        // top of the wheel (offset +y from the hub) along a x up; the car drives +x, so the
+        // spin is positive when (a x up).x > 0. Measured once, before the first turn.
         w.mesh.updateWorldMatrix(true, false);
         w.mesh.getWorldQuaternion(tmp.q);
         tmp.axis.set(w.axis === "x" ? 1 : 0, w.axis === "y" ? 1 : 0, w.axis === "z" ? 1 : 0).applyQuaternion(tmp.q);
@@ -167,8 +187,11 @@ const CarModel = ({ onLights }: { onLights?: (l: THREE.MeshStandardMaterial[]) =
         w.mesh.getWorldScale(tmp.s);
         w.radius = Math.max(0.05, w.radius * tmp.s.x);
       }
-      // clamp like the scroll engine does, so a stalled tab doesn't spin the wheels wildly
-      w.mesh.rotation[w.axis] += (w.sign * drive.speed * Math.min(dt, 0.05)) / w.radius;
+      // clamp dt like the scroll engine does, so a stalled tab doesn't spin the wheels wildly,
+      // cap the per-frame step against strobing, and wrap so the angle never grows unbounded
+      const step = Math.min(drive.speed / w.radius, MAX_WHEEL_RATE) * Math.min(dt, 0.05);
+      const rot = w.mesh.rotation;
+      rot[w.axis] = (rot[w.axis] + w.sign * step) % TAU;
     }
   });
 

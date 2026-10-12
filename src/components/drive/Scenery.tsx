@@ -9,7 +9,11 @@
  *  - Shrubs / rocks: sparse desert clutter on both shoulders (|z| 6..20).
  *    Poles, shrubs and rocks are InstancedMeshes whose instances are re-placed
  *    every frame at x = base - drive.traveled, wrapped modulo LOOP so they
- *    recycle seamlessly ahead of the car.
+ *    recycle seamlessly ahead of the car. Both ends of the loop sit beyond the
+ *    fog's far distance from every camera preset, so the wrap is never seen.
+ *  - Movers fade out (dithered) when they come within a few units of the
+ *    camera: several presets stand on the shoulders, and a pole or shrub
+ *    whipping past right in front of the lens read as a black flash.
  *
  * Every material colour is re-mixed each frame from drive.sky weights
  * (dawn / day / golden / night), the same way WorldScene tints the road, and
@@ -21,17 +25,16 @@
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import { drive, SKY_NAMES, type SkyName } from "@/lib/drive";
+import { drive, hexRGB, mixSkyRGB, type SkyName } from "@/lib/drive";
 
-/* ---------- palettes per time of day ---------- */
-type Palette = Record<SkyName, THREE.Color>;
+/* ---------- palettes per time of day (sRGB triplets) ---------- */
+type Palette = Record<SkyName, [number, number, number]>;
 
-const col = (hex: string): THREE.Color => new THREE.Color(hex);
 const palette = (dawn: string, day: string, golden: string, night: string): Palette => ({
-  dawn: col(dawn),
-  day: col(day),
-  golden: col(golden),
-  night: col(night),
+  dawn: hexRGB(dawn),
+  day: hexRGB(day),
+  golden: hexRGB(golden),
+  night: hexRGB(night),
 });
 
 const RIDGE_FAR = palette("#3a241c", "#d9d4ca", "#3a241c", "#141210");
@@ -41,34 +44,38 @@ const POLE = palette("#2b1d17", "#a39d91", "#2b1d17", "#0e0d0c");
 const SHRUB = palette("#2b1d17", "#aaa497", "#2f1f19", "#0e0d0c");
 const ROCK = palette("#3a241c", "#bdb7ab", "#3a241c", "#141210");
 /** faint warm rim on the far ridge at dawn / golden hour */
-const RIM = col("#c0392b");
+const RIM = new THREE.Color("#c0392b");
 const RIM_STRENGTH = 0.14;
 
-/** Blend a palette by the current sky weights (same idea as `mix` in WorldScene). */
+const rgb: [number, number, number] = [0, 0, 0];
+/** Blend a palette by the current sky weights, in sRGB like the fog and the CSS sky (see `tint` in WorldScene). */
 const mixSky = (set: Palette, out: THREE.Color): THREE.Color => {
-  out.setRGB(0, 0, 0);
-  for (const k of SKY_NAMES) {
-    const c = set[k];
-    const w = drive.sky[k];
-    out.r += c.r * w;
-    out.g += c.g * w;
-    out.b += c.b * w;
-  }
-  return out;
+  mixSkyRGB(set, rgb);
+  return out.setRGB(rgb[0], rgb[1], rgb[2], THREE.SRGBColorSpace);
 };
 
 /* ---------- layout constants ---------- */
 /** ridges span x in [-RIDGE_HALF, RIDGE_HALF] */
 const RIDGE_HALF = 250;
 const RIDGE_BASE_Y = -0.4;
-/** recycled roadside objects live on a loop this long ... */
-const LOOP = 324;
-/** ... placed from BEHIND units behind the car to LOOP - BEHIND ahead of it */
-const BEHIND = 110;
+/**
+ * Recycled roadside objects live on a loop this long, placed from BEHIND units
+ * behind the car to LOOP - BEHIND ahead of it. Both ends must be further than
+ * the fog's far distance (170 by day) in view depth from every camera preset:
+ * the old [-110, 214) range let objects vanish in plain sight at x = -110 in
+ * the Projects and Blog shots, which look back down the road. LOOP is a
+ * multiple of POLE_GAP so the pole spacing stays even across the wrap.
+ */
+const LOOP = 432;
+const BEHIND = 200;
 const POLE_GAP = 18;
 const POLE_Z = -7;
-const SHRUB_COUNT = 96;
-const ROCK_COUNT = 40;
+/** same density as before on the longer loop */
+const SHRUB_COUNT = 128;
+const ROCK_COUNT = 54;
+/** movers are invisible nearer than NEAR_HIDE to the camera and solid beyond NEAR_SHOW */
+const NEAR_HIDE = 3;
+const NEAR_SHOW = 7.5;
 /** shoulder band for shrubs and rocks: |z| in [SHOULDER_MIN, SHOULDER_MAX] */
 const SHOULDER_MIN = 6;
 const SHOULDER_MAX = 20;
@@ -245,6 +252,27 @@ type World = { ridges: RidgeLayer[]; movers: MoverSet[] };
 const makeMaterial = (): THREE.MeshStandardMaterial =>
   new THREE.MeshStandardMaterial({ color: "#2b1d17", roughness: 1, metalness: 0, flatShading: true });
 
+/**
+ * Screen-door fade near the camera: fragments closer than NEAR_SHOW are
+ * discarded against interleaved gradient noise. Dithering keeps the material
+ * opaque (no sorting, no depth-write issues) and needs no per-instance state.
+ */
+const NEAR_FADE_GLSL = /* glsl */ `
+  {
+    float nearFade = smoothstep(${NEAR_HIDE.toFixed(2)}, ${NEAR_SHOW.toFixed(2)}, length(vViewPosition));
+    float ign = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+    if (nearFade < 1.0 && nearFade <= ign) discard;
+  }
+`;
+const makeMoverMaterial = (): THREE.MeshStandardMaterial => {
+  const material = makeMaterial();
+  material.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace("#include <clipping_planes_fragment>", `#include <clipping_planes_fragment>\n${NEAR_FADE_GLSL}`);
+  };
+  material.customProgramCacheKey = () => "scenery-near-fade";
+  return material;
+};
+
 const makeRidgeLayer = (spec: RidgeSpec, pal: Palette, rim: boolean, rand: Rand): RidgeLayer => {
   const material = makeMaterial();
   if (rim) material.emissive.copy(RIM);
@@ -253,7 +281,7 @@ const makeRidgeLayer = (spec: RidgeSpec, pal: Palette, rim: boolean, rand: Rand)
 };
 
 const makeMoverSet = (geometry: THREE.BufferGeometry, pal: Palette, items: Placement[]): MoverSet => {
-  const material = makeMaterial();
+  const material = makeMoverMaterial();
   const mesh = new THREE.InstancedMesh(geometry, material, items.length);
   // instances are spread over the whole loop, so never let three cull by the geometry's own bounds
   mesh.frustumCulled = false;

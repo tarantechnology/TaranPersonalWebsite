@@ -5,26 +5,25 @@ import { ContactShadows, Html } from "@react-three/drei";
 import CarModel, { CAR_LENGTH } from "./CarModel";
 import Env from "./Env";
 import Scenery from "./Scenery";
-import { drive, lerp, nightness } from "@/lib/drive";
+import { damp, drive, hexRGB, lerp, mixSkyRGB, nightness, sceneWeight, smoothstep, wrapAngle, type SkyName } from "@/lib/drive";
 
-/* ---------- palette per time of day (RGB 0..1) ---------- */
-const col = (hex: string) => new THREE.Color(hex);
-const FOG = { dawn: col("#f0a872"), day: col("#ffffff"), golden: col("#ef8a55"), night: col("#0a0908") };
-const GROUND = { dawn: col("#2b1d17"), day: col("#e9e6df"), golden: col("#3a241c"), night: col("#0c0b0a") };
+/* ---------- palette per time of day (sRGB 0..1) ---------- */
+type SkyPalette = Record<SkyName, [number, number, number]>;
+const FOG: SkyPalette = { dawn: hexRGB("#f0a872"), day: hexRGB("#ffffff"), golden: hexRGB("#ef8a55"), night: hexRGB("#0a0908") };
+const GROUND: SkyPalette = { dawn: hexRGB("#2b1d17"), day: hexRGB("#e9e6df"), golden: hexRGB("#3a241c"), night: hexRGB("#0c0b0a") };
 /** multiplier over the baked asphalt texture: bright by day, dim at night */
-const ROAD = { dawn: col("#8a7a70"), day: col("#ffffff"), golden: col("#9a7a68"), night: col("#555250") };
+const ROAD: SkyPalette = { dawn: hexRGB("#8a7a70"), day: hexRGB("#ffffff"), golden: hexRGB("#9a7a68"), night: hexRGB("#555250") };
 
-const mix = (set: Record<string, THREE.Color>, out: THREE.Color) => {
-  const s = drive.sky;
-  out.setRGB(0, 0, 0);
-  (Object.keys(set) as (keyof typeof set)[]).forEach((k) => {
-    const c = set[k];
-    const w = s[k as keyof typeof s];
-    out.r += c.r * w;
-    out.g += c.g * w;
-    out.b += c.b * w;
-  });
-  return out;
+const rgb: [number, number, number] = [0, 0, 0];
+/**
+ * Blend a palette by the sky weights into `out`. The blend is done in sRGB, the
+ * space the CSS sky layers cross-fade in, so the fully fogged horizon (three
+ * writes the fog colour in output sRGB) matches the sky behind the canvas
+ * during transitions too, not just at the pure presets.
+ */
+const tint = (set: SkyPalette, out: THREE.Color) => {
+  mixSkyRGB(set, rgb);
+  return out.setRGB(rgb[0], rgb[1], rgb[2], THREE.SRGBColorSpace);
 };
 
 /* ---------- the road: an endless strip whose texture rolls under the car ---------- */
@@ -60,12 +59,11 @@ const Road = () => {
   const tex = useMemo(makeRoadTexture, []);
   const mat = useRef<THREE.MeshStandardMaterial>(null);
   const ground = useRef<THREE.MeshStandardMaterial>(null);
-  const tmp = useMemo(() => new THREE.Color(), []);
-  useFrame((_, dt) => {
-    tex.offset.x = (drive.traveled / 8) % 1; // 8 units per texture tile
-    if (mat.current) mat.current.color.copy(mix(ROAD, tmp));
-    if (ground.current) ground.current.color.copy(mix(GROUND, tmp));
-    void dt;
+  useFrame(() => {
+    // 480-unit plane / 60 repeats = 8 units per tile; an offset of 1 is exactly one tile, so the wrap is seamless
+    tex.offset.x = (drive.traveled / 8) % 1;
+    if (mat.current) tint(ROAD, mat.current.color);
+    if (ground.current) tint(GROUND, ground.current.color);
   });
   useEffect(() => () => tex.dispose(), [tex]);
   return (
@@ -91,10 +89,13 @@ const Sun = () => {
     if (!m) return;
     const s = drive.sky;
     const vis = Math.max(s.dawn, s.golden);
-    m.visible = vis > 0.02;
-    const scale = 14 + s.golden * 14;
-    m.scale.setScalar(scale * Math.max(0.001, vis));
-    m.position.set(130, lerp(5, 7, s.golden) + s.dawn * 3, lerp(36, -24, s.golden));
+    m.visible = vis > 0.002;
+    if (!m.visible) return;
+    // size and place by which sun this is (dawn or golden), not by how faded it is:
+    // it fades out in place instead of shrinking and sliding across the sky
+    const g = s.golden / Math.max(1e-4, s.dawn + s.golden);
+    m.scale.setScalar(lerp(14, 28, g));
+    m.position.set(130, lerp(8, 7, g), lerp(36, -24, g));
     (m.material as THREE.MeshBasicMaterial).opacity = vis;
   });
   return (
@@ -121,6 +122,7 @@ const Stars = () => {
     g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     return g;
   }, []);
+  useEffect(() => () => geo.dispose(), [geo]);
   const mat = useRef<THREE.PointsMaterial>(null);
   useFrame(() => {
     if (mat.current) mat.current.opacity = Math.max(0, drive.sky.night - 0.1) * 0.9;
@@ -142,56 +144,114 @@ export const SIGNS = [
   { range: "Jul 2025 — Sep 2025", role: "Software Engineer Intern", company: "Pally (YC S25) · San Francisco, CA", body: "$1.1M pre-seed. Full-stack, backend, infra and search, whatever was next to my name on the whiteboard." },
   { range: "May 2026 — Aug 2026", role: "ML Engineer Intern", company: "Snap Inc. · Palo Alto, CA", body: "Summer 2026.", next: true },
 ];
-const SIGN_GAP = 16;
-const SIGN_SPAWN = 28; // road units ahead of the car where the first sign appears
-const SIGN_GONE = -26; // behind the car, where a sign is out of frame
+/** behind the telephone-pole line (z = -7, cross-arms to about -8.2) so a sign never intersects a pole */
+const SIGN_Z = -8.6;
+/** minimum road distance between consecutive signs: with the Experience camera two cards never overlap on screen */
+const SIGN_GAP = 18;
+/** road units ahead of the car where a sign appears (small, near the vanishing point) ... */
+const SIGN_SPAWN = 36;
+/** ... and the distance over which it fades in, since the spawn point is inside the frame */
+const SIGN_FADE = 8;
+/** behind the car, past the left edge of the Experience frame (it leaves the frame near x = -6) */
+const SIGN_GONE = -12;
+/** Experience hold progress at which sign i is due */
+const signDue = (i: number) => 0.01 + (i / (SIGNS.length - 1)) * 0.8;
+
+/** 0 = waiting, 1 = on the road (spawned when the road had travelled `at`), 2 = passed */
+type SignState = { phase: 0 | 1 | 2; at: number };
 
 /**
- * The signs stand on the road and ride with it (same `traveled` the asphalt
- * and the poles use), so the car drives past them. They spawn ahead when
- * the Experience section starts and re-arm if you scroll back above it.
+ * The signs stand on the road and ride with it: a live sign's x is
+ * SIGN_SPAWN - (traveled - at), the same `traveled` the asphalt and the poles
+ * use, so it always passes the car at exactly road speed and never looks
+ * attached to it. Scroll only decides *when* each one appears: sign i spawns
+ * once the Experience hold reaches signDue(i) and the previous sign is
+ * SIGN_GAP down the road. Passed signs re-arm when you scroll back above them.
+ * Every DOM card stays mounted (no React state per frame); hidden ones get
+ * visibility:hidden, because drei's <Html> ignores the 3D `visible` flag.
  */
 const RoadSigns = () => {
-  const group = useRef<THREE.Group>(null);
-  const [active, setActive] = useState(false);
-  const start = useRef<number | null>(null);
+  const groups = useRef<(THREE.Group | null)[]>([]);
+  const mats = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
+  const cards = useRef<(HTMLDivElement | null)[]>([]);
+  const shown = useMemo(() => SIGNS.map(() => -1), []);
+  const signs = useMemo<SignState[]>(() => SIGNS.map(() => ({ phase: 0, at: 0 })), []);
+  const primed = useRef(false);
+
+  // priority -1: positions are final before drei's <Html> (priority 0) projects the cards,
+  // otherwise the cards trail their poles by a frame of road travel
   useFrame(() => {
-    const g = group.current;
-    if (!g) return;
-    if (drive.section < 2) start.current = null;
-    if (drive.section === 2 && start.current === null) start.current = drive.traveled;
-    let anyVisible = false;
-    if (start.current !== null) {
-      const travel = drive.traveled - start.current;
-      g.children.forEach((child, i) => {
-        const x = SIGN_SPAWN + i * SIGN_GAP - travel;
-        child.position.x = x;
-        child.visible = x > SIGN_GONE && x < SIGN_SPAWN + 1;
-        if (child.visible) anyVisible = true;
-      });
+    const p = drive.expProgress;
+    const inside = p > 0 && p < 1;
+
+    // landing mid-section (reload, anchor): start from the sign that is due now, not the first one
+    if (!primed.current) {
+      primed.current = true;
+      if (inside) signs.forEach((s, i) => i + 1 < signs.length && signDue(i + 1) <= p && (s.phase = 2));
     }
-    const on = start.current !== null && anyVisible;
-    if (on !== active) setActive(on);
-    g.visible = on;
-  });
+
+    // scrolled back above a passed sign: it can come again
+    signs.forEach((s, i) => {
+      if (s.phase === 2 && p < signDue(i) - 0.005) s.phase = 0;
+    });
+
+    // live signs move with the road
+    let lead = -Infinity; // x of the most recently spawned live sign
+    signs.forEach((s) => {
+      if (s.phase !== 1) return;
+      const x = SIGN_SPAWN - (drive.traveled - s.at);
+      if (x < SIGN_GONE) s.phase = 2;
+      else lead = Math.max(lead, x);
+    });
+
+    // spawn the next waiting sign once it is due and the road ahead is clear
+    if (inside) {
+      const next = signs.findIndex((s) => s.phase === 0);
+      if (next >= 0 && p >= signDue(next) && lead <= SIGN_SPAWN - SIGN_GAP) {
+        signs[next].phase = 1;
+        signs[next].at = drive.traveled;
+      }
+    }
+
+    // fade with the Experience camera, so signs still on the road leave with the scene instead of popping
+    const scene = sceneWeight("experience");
+    signs.forEach((s, i) => {
+      const g = groups.current[i];
+      let o = 0;
+      if (s.phase === 1) {
+        const x = SIGN_SPAWN - (drive.traveled - s.at);
+        if (g) g.position.x = x;
+        o = smoothstep((SIGN_SPAWN - x) / SIGN_FADE) * scene;
+      }
+      if (g) g.visible = o > 0.001;
+      const m = mats.current[i];
+      if (m) m.opacity = 0.8 * o;
+      const card = cards.current[i];
+      // only touch the DOM when the value really changes (but never skip the step to/from hidden)
+      if (card && (Math.abs(o - shown[i]) > 0.004 || o > 0.001 !== shown[i] > 0.001)) {
+        shown[i] = o;
+        card.style.opacity = o.toFixed(3);
+        card.style.visibility = o > 0.001 ? "visible" : "hidden";
+      }
+    });
+  }, -1);
+
   return (
-    <group ref={group} visible={false}>
+    <group>
       {SIGNS.map((s, i) => (
-        <group key={s.role + s.range} position={[6 + i * SIGN_GAP, 0, -7.2]}>
+        <group key={s.role + s.range} ref={(g) => (groups.current[i] = g)} position={[SIGN_SPAWN, 0, SIGN_Z]} visible={false}>
           <mesh position={[0, 1.5, 0]}>
             <cylinderGeometry args={[0.03, 0.03, 3, 6]} />
-            <meshBasicMaterial color="#e74c3c" transparent opacity={0.8} />
+            <meshBasicMaterial ref={(m) => (mats.current[i] = m)} color="#e74c3c" transparent opacity={0} depthWrite={false} />
           </mesh>
-          {active && (
-            <Html position={[0, 3.6, 0]} sprite transform distanceFactor={6.5} center zIndexRange={[2, 1]} style={{ pointerEvents: "none" }}>
-              <div className={`holo-sign ${s.next ? "holo-sign--next" : ""}`}>
-                <span className="holo-sign__range">{s.range}{s.next ? " · next" : ""}</span>
-                <span className="holo-sign__role">{s.role}</span>
-                <span className="holo-sign__co">{s.company}</span>
-                <span className="holo-sign__body">{s.body}</span>
-              </div>
-            </Html>
-          )}
+          <Html position={[0, 3.6, 0]} sprite transform distanceFactor={6.5} zIndexRange={[2, 1]} style={{ pointerEvents: "none" }}>
+            <div ref={(el) => (cards.current[i] = el)} className={`holo-sign ${s.next ? "holo-sign--next" : ""}`} style={{ opacity: 0, visibility: "hidden" }}>
+              <span className="holo-sign__range">{s.range}{s.next ? " · next" : ""}</span>
+              <span className="holo-sign__role">{s.role}</span>
+              <span className="holo-sign__co">{s.company}</span>
+              <span className="holo-sign__body">{s.body}</span>
+            </div>
+          </Html>
         </group>
       ))}
     </group>
@@ -207,8 +267,11 @@ const Rig = () => {
   const lightsRef = useRef<THREE.MeshStandardMaterial[]>([]);
   const { camera, scene, gl } = useThree();
   const fog = useMemo(() => new THREE.Fog("#e8a06a", 26, 140), []);
-  const tmp = useMemo(() => ({ c: new THREE.Color(), look: new THREE.Vector3(), box: new THREE.Box3(), v: new THREE.Vector3(), corners: Array.from({ length: 8 }, () => new THREE.Vector3()) }), []);
-  const orbitT = useRef(0);
+  const tmp = useMemo(() => ({ box: new THREE.Box3(), corners: Array.from({ length: 8 }, () => new THREE.Vector3()) }), []);
+  /** the camera's own smoothed pose, kept in cylindrical form around the car (see motion.ts) */
+  const rig = useMemo(() => ({ ready: false, r: 0, th: 0, y: 0, look: new THREE.Vector3(), swayT: 0 }), []);
+  // a spotlight only aims at its target if the target is in the scene graph (it is mounted below)
+  const headTarget = useMemo(() => new THREE.Object3D(), []);
 
   useEffect(() => {
     scene.fog = fog;
@@ -222,32 +285,55 @@ const Rig = () => {
     lightsRef.current = l;
   }, []);
 
+  // priority -1: the camera is final before anything that projects through it this
+  // frame (drei <Html> road signs, the reticle box below), so the DOM never lags the canvas
   useFrame((state, dt) => {
     const cam = camera as THREE.PerspectiveCamera;
     const d = drive.cam;
     // frame-rate independent smoothing
-    const k = 1 - Math.exp(-dt * 4.5);
-    // the last scene sways slowly around the car instead of a full orbit, so the
-    // blend from the previous camera never cuts through the car
-    orbitT.current += dt;
-    const sway = Math.sin(orbitT.current * 0.35) * 0.55 * d.orbit;
-    const cs = Math.cos(sway), sn = Math.sin(sway);
-    const px = d.pos[0] * cs - d.pos[2] * sn;
-    const pz = d.pos[0] * sn + d.pos[2] * cs;
-    const py = d.pos[1];
-    cam.position.x = lerp(cam.position.x, px, k);
-    cam.position.y = lerp(cam.position.y, py, k);
-    cam.position.z = lerp(cam.position.z, pz, k);
-    tmp.look.set(d.look[0], d.look[1], d.look[2]);
-    cam.lookAt(tmp.look);
-    const fov = lerp(cam.fov, d.fov, k);
-    if (Math.abs(fov - cam.fov) > 0.01) {
-      cam.fov = fov;
+    const k = damp(4.5, dt);
+
+    // the last scene sways slowly around the car instead of a full orbit. The phase
+    // restarts at 0 whenever the sway fades in, so it never starts mid-swing.
+    if (d.orbit > 0.001) rig.swayT += dt;
+    else rig.swayT = 0;
+    const sway = Math.sin(rig.swayT * 0.35) * 0.55 * d.orbit;
+
+    // smooth radius / angle / height rather than x / y / z: a fast jump between presets
+    // on opposite sides (blog -> contact) swings round the car instead of cutting through it
+    const tr = Math.hypot(d.pos[0], d.pos[2]);
+    const tth = Math.atan2(d.pos[2], d.pos[0]) + sway;
+    if (!rig.ready) {
+      // first frame: start on the target instead of gliding in from the Canvas default
+      rig.ready = true;
+      rig.r = tr;
+      rig.th = tth;
+      rig.y = d.pos[1];
+      rig.look.fromArray(d.look);
+      cam.fov = d.fov;
+      cam.updateProjectionMatrix();
+    } else {
+      rig.r += (tr - rig.r) * k;
+      rig.th += wrapAngle(tth - rig.th) * k;
+      rig.y += (d.pos[1] - rig.y) * k;
+      // the look target eases with the position; on its own it would follow raw scroll and twitch
+      rig.look.x += (d.look[0] - rig.look.x) * k;
+      rig.look.y += (d.look[1] - rig.look.y) * k;
+      rig.look.z += (d.look[2] - rig.look.z) * k;
+    }
+    cam.position.set(rig.r * Math.cos(rig.th), rig.y, rig.r * Math.sin(rig.th));
+    cam.lookAt(rig.look);
+    // ease every frame and snap when close. (Gating on the step size froze the fov up
+    // to ~0.1 deg short of the target and made slow scrolls zoom in visible steps.)
+    const df = d.fov - cam.fov;
+    if (df !== 0) {
+      cam.fov = Math.abs(df) < 0.005 ? d.fov : cam.fov + df * k;
       cam.updateProjectionMatrix();
     }
+    cam.updateMatrixWorld();
 
     // fog follows the horizon colour; thicker at night and dawn
-    fog.color.copy(mix(FOG, tmp.c));
+    tint(FOG, fog.color);
     const n = nightness();
     fog.near = lerp(34, 16, n);
     fog.far = lerp(170, 80, n);
@@ -266,13 +352,15 @@ const Rig = () => {
       s.color.setRGB(1, lerp(0.96, 0.7, warm), lerp(0.9, 0.45, warm));
       s.position.set(lerp(8, 30, warm), lerp(14, 5, warm), lerp(6, -8, drive.sky.golden));
     }
-    lightsRef.current.forEach((m) => (m.emissiveIntensity = n * 2.4));
+    const lights = lightsRef.current;
+    for (let i = 0; i < lights.length; i++) lights[i].emissiveIntensity = n * 2.4;
     if (head.current) head.current.intensity = n * 40;
 
     // screen-space box of the car body (not the shadow plane) for the HUD reticle
     const b = body.current;
-    if (b) {
+    if (b && g) {
       const { box, corners } = tmp;
+      g.updateWorldMatrix(true, false); // the bob and pitch above changed it this frame
       box.setFromObject(b);
       const r = gl.domElement.clientWidth, h = gl.domElement.clientHeight;
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -283,9 +371,14 @@ const Rig = () => {
         minX = Math.min(minX, px2); maxX = Math.max(maxX, px2);
         minY = Math.min(minY, py2); maxY = Math.max(maxY, py2);
       }
-      drive.car = { x: minX, y: minY, w: maxX - minX, h: maxY - minY, ok: true };
+      const c = drive.car; // in place: no allocation per frame
+      c.x = minX;
+      c.y = minY;
+      c.w = maxX - minX;
+      c.h = maxY - minY;
+      c.ok = true;
     }
-  });
+  }, -1);
 
   return (
     <>
@@ -296,7 +389,8 @@ const Rig = () => {
         <group ref={body}>
           <CarModel onLights={onLights} />
         </group>
-        <spotLight ref={head} position={[2.3, 0.7, 0]} target-position={[12, 0, 0]} angle={0.55} penumbra={0.6} intensity={0} color="#ffe2b0" distance={40} />
+        <primitive object={headTarget} position={[12, 0, 0]} />
+        <spotLight ref={head} position={[2.3, 0.7, 0]} target={headTarget} angle={0.55} penumbra={0.6} intensity={0} color="#ffe2b0" distance={40} />
         <ContactShadows position={[0, 0.002, 0]} opacity={0.5} scale={CAR_LENGTH * 2} blur={2} far={2} resolution={512} frames={1} />
       </group>
       <Road />
