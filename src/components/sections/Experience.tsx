@@ -1,7 +1,7 @@
 import { Reveal, Words } from "@/components/drive/Reveal";
 
 const entries = [
-  { range: "May 2026 — Aug 2026", role: "ML Engineer Intern", company: "Snap Inc. · Palo Alto, CA", body: "Summer 2026.", next: true },
+  { range: "May 2026 — Aug 2026", role: "ML Engineer Intern", company: "Snap Inc. · Palo Alto, CA", body: "Worked on Spotlight recommendation models, from ranking and reward modeling to inference optimization. Shipped experiments that improved engagement while cutting ML serving and training costs.", next: true },
   { range: "Jul 2025 — Sep 2025", role: "Software Engineer Intern", company: "Pally (YC S25) · San Francisco, CA", body: "$1.1M pre-seed. Full-stack, backend, infra and search, whatever was next to my name on the whiteboard." },
   { range: "May 2025 — Jul 2025", role: "SDE Intern", company: "Georgia Tech Research Institute · Huntsville, AL", body: "Performance testing suite for the Air & Missile Defense division." },
   { range: "Sep 2024 — Present", role: "Lead Undergraduate Researcher", company: "Georgia Tech CHART Lab · Atlanta, GA", body: "Real-time ML pipelines that make technical cross-collaboration way less painful." },
