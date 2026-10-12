@@ -1,11 +1,11 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Html } from "@react-three/drei";
+import { ContactShadows } from "@react-three/drei";
 import CarModel, { CAR_LENGTH } from "./CarModel";
 import Env from "./Env";
 import Scenery from "./Scenery";
-import { damp, drive, hexRGB, lerp, mixSkyRGB, nightness, sceneWeight, smoothstep, wrapAngle, type SkyName } from "@/lib/drive";
+import { damp, drive, hexRGB, lerp, mixSkyRGB, nightness, wrapAngle, type SkyName } from "@/lib/drive";
 
 /* ---------- palette per time of day (sRGB 0..1) ---------- */
 type SkyPalette = Record<SkyName, [number, number, number]>;
@@ -134,129 +134,6 @@ const Stars = () => {
   );
 };
 
-/* ---------- holographic road signs for the Experience scene ---------- */
-export const SIGNS = [
-  { range: "Jun 2022 — Nov 2023", role: "Research Intern", company: "UNC Wilmington · Wilmington, NC", body: "Novel method to detect atrial fibrillation in real time. Under Dr. Cuxian Chen & Dr. Yishi Wang." },
-  { range: "May 2023 — Sep 2023", role: "Research Intern", company: "WSPR Lab · Raleigh, NC", body: "Analyzed 250K+ virtual reality privacy concerns under Dr. Anupam Das." },
-  { range: "2024 — Present", role: "Co-Founder", company: "Tabl · AI CAD generation", body: "Text-to-CAD solved. Backed by Christopher Klaus." },
-  { range: "Sep 2024 — Present", role: "Lead Undergraduate Researcher", company: "Georgia Tech CHART Lab · Atlanta, GA", body: "Real-time ML pipelines that make technical cross-collaboration way less painful." },
-  { range: "May 2025 — Jul 2025", role: "SDE Intern", company: "Georgia Tech Research Institute · Huntsville, AL", body: "Performance testing suite for the Air & Missile Defense division." },
-  { range: "Jul 2025 — Sep 2025", role: "Software Engineer Intern", company: "Pally (YC S25) · San Francisco, CA", body: "$1.1M pre-seed. Full-stack, backend, infra and search, whatever was next to my name on the whiteboard." },
-  { range: "May 2026 — Aug 2026", role: "ML Engineer Intern", company: "Snap Inc. · Palo Alto, CA", body: "Summer 2026.", next: true },
-];
-/** behind the telephone-pole line (z = -7, cross-arms to about -8.2) so a sign never intersects a pole */
-const SIGN_Z = -8.6;
-/** minimum road distance between consecutive signs: with the Experience camera two cards never overlap on screen */
-const SIGN_GAP = 18;
-/** road units ahead of the car where a sign appears (small, near the vanishing point) ... */
-const SIGN_SPAWN = 36;
-/** ... and the distance over which it fades in, since the spawn point is inside the frame */
-const SIGN_FADE = 8;
-/** behind the car, past the left edge of the Experience frame (it leaves the frame near x = -6) */
-const SIGN_GONE = -12;
-/** Experience hold progress at which sign i is due */
-const signDue = (i: number) => 0.01 + (i / (SIGNS.length - 1)) * 0.8;
-
-/** 0 = waiting, 1 = on the road (spawned when the road had travelled `at`), 2 = passed */
-type SignState = { phase: 0 | 1 | 2; at: number };
-
-/**
- * The signs stand on the road and ride with it: a live sign's x is
- * SIGN_SPAWN - (traveled - at), the same `traveled` the asphalt and the poles
- * use, so it always passes the car at exactly road speed and never looks
- * attached to it. Scroll only decides *when* each one appears: sign i spawns
- * once the Experience hold reaches signDue(i) and the previous sign is
- * SIGN_GAP down the road. Passed signs re-arm when you scroll back above them.
- * Every DOM card stays mounted (no React state per frame); hidden ones get
- * visibility:hidden, because drei's <Html> ignores the 3D `visible` flag.
- */
-const RoadSigns = () => {
-  const groups = useRef<(THREE.Group | null)[]>([]);
-  const mats = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
-  const cards = useRef<(HTMLDivElement | null)[]>([]);
-  const shown = useMemo(() => SIGNS.map(() => -1), []);
-  const signs = useMemo<SignState[]>(() => SIGNS.map(() => ({ phase: 0, at: 0 })), []);
-  const primed = useRef(false);
-
-  // priority -1: positions are final before drei's <Html> (priority 0) projects the cards,
-  // otherwise the cards trail their poles by a frame of road travel
-  useFrame(() => {
-    const p = drive.expProgress;
-    const inside = p > 0 && p < 1;
-
-    // landing mid-section (reload, anchor): start from the sign that is due now, not the first one
-    if (!primed.current) {
-      primed.current = true;
-      if (inside) signs.forEach((s, i) => i + 1 < signs.length && signDue(i + 1) <= p && (s.phase = 2));
-    }
-
-    // scrolled back above a passed sign: it can come again
-    signs.forEach((s, i) => {
-      if (s.phase === 2 && p < signDue(i) - 0.005) s.phase = 0;
-    });
-
-    // live signs move with the road
-    let lead = -Infinity; // x of the most recently spawned live sign
-    signs.forEach((s) => {
-      if (s.phase !== 1) return;
-      const x = SIGN_SPAWN - (drive.traveled - s.at);
-      if (x < SIGN_GONE) s.phase = 2;
-      else lead = Math.max(lead, x);
-    });
-
-    // spawn the next waiting sign once it is due and the road ahead is clear
-    if (inside) {
-      const next = signs.findIndex((s) => s.phase === 0);
-      if (next >= 0 && p >= signDue(next) && lead <= SIGN_SPAWN - SIGN_GAP) {
-        signs[next].phase = 1;
-        signs[next].at = drive.traveled;
-      }
-    }
-
-    // fade with the Experience camera, so signs still on the road leave with the scene instead of popping
-    const scene = sceneWeight("experience");
-    signs.forEach((s, i) => {
-      const g = groups.current[i];
-      let o = 0;
-      if (s.phase === 1) {
-        const x = SIGN_SPAWN - (drive.traveled - s.at);
-        if (g) g.position.x = x;
-        o = smoothstep((SIGN_SPAWN - x) / SIGN_FADE) * scene;
-      }
-      if (g) g.visible = o > 0.001;
-      const m = mats.current[i];
-      if (m) m.opacity = 0.8 * o;
-      const card = cards.current[i];
-      // only touch the DOM when the value really changes (but never skip the step to/from hidden)
-      if (card && (Math.abs(o - shown[i]) > 0.004 || o > 0.001 !== shown[i] > 0.001)) {
-        shown[i] = o;
-        card.style.opacity = o.toFixed(3);
-        card.style.visibility = o > 0.001 ? "visible" : "hidden";
-      }
-    });
-  }, -1);
-
-  return (
-    <group>
-      {SIGNS.map((s, i) => (
-        <group key={s.role + s.range} ref={(g) => (groups.current[i] = g)} position={[SIGN_SPAWN, 0, SIGN_Z]} visible={false}>
-          <mesh position={[0, 1.5, 0]}>
-            <cylinderGeometry args={[0.03, 0.03, 3, 6]} />
-            <meshBasicMaterial ref={(m) => (mats.current[i] = m)} color="#e74c3c" transparent opacity={0} depthWrite={false} />
-          </mesh>
-          <Html position={[0, 3.6, 0]} sprite transform distanceFactor={6.5} zIndexRange={[2, 1]} style={{ pointerEvents: "none" }}>
-            <div ref={(el) => (cards.current[i] = el)} className={`holo-sign ${s.next ? "holo-sign--next" : ""}`} style={{ opacity: 0, visibility: "hidden" }}>
-              <span className="holo-sign__range">{s.range}{s.next ? " · next" : ""}</span>
-              <span className="holo-sign__role">{s.role}</span>
-              <span className="holo-sign__co">{s.company}</span>
-              <span className="holo-sign__body">{s.body}</span>
-            </div>
-          </Html>
-        </group>
-      ))}
-    </group>
-  );
-};
 
 /* ---------- camera, lights, fog, car ---------- */
 const Rig = () => {
@@ -286,7 +163,7 @@ const Rig = () => {
   }, []);
 
   // priority -1: the camera is final before anything that projects through it this
-  // frame (drei <Html> road signs, the reticle box below), so the DOM never lags the canvas
+  // frame, so anything reading the camera this frame sees its final position
   useFrame((state, dt) => {
     const cam = camera as THREE.PerspectiveCamera;
     const d = drive.cam;
@@ -395,7 +272,6 @@ const Rig = () => {
       </group>
       <Road />
       <Scenery />
-      <RoadSigns />
       <Sun />
       <Stars />
     </>

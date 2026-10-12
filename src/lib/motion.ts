@@ -90,24 +90,6 @@ export const useDriveEngine = () => {
       triggers.push(st);
     });
 
-    // the Experience section hands its own progress to the road signs; the range
-    // matches the camera hold (section top at viewport top -> bottom at viewport bottom)
-    const exp = document.getElementById("experience");
-    if (exp) {
-      triggers.push(
-        ScrollTrigger.create({
-          trigger: exp,
-          start: "top top",
-          end: "bottom bottom",
-          onUpdate: (self) => {
-            drive.expProgress = self.progress;
-          },
-          onRefresh: (self) => {
-            drive.expProgress = self.progress;
-          },
-        })
-      );
-    }
 
     // one listener for all sections; runs after every refresh (load, resize, layout change)
     ScrollTrigger.addEventListener("refresh", measure);
@@ -135,9 +117,7 @@ export const useDriveEngine = () => {
       drive.progress = Math.min(1, Math.max(0, y / maxScroll));
 
       // always driving; scrolling is the throttle
-      // cruise slower past the road signs so each one can be read; scrolling is still the throttle
-      const cruise = drive.section === 2 ? 6 : 10;
-      const targetSpeed = cruise + Math.min(60, Math.abs(drive.velocity) * 0.04);
+      const targetSpeed = 10 + Math.min(60, Math.abs(drive.velocity) * 0.04);
       drive.speed = lerp(drive.speed, targetSpeed, damp(3, dt)); // ~0.05 per frame at 60fps
       drive.traveled += drive.speed * dt;
 

@@ -62,8 +62,6 @@ export const drive = {
   /** road units travelled, and current speed in units/s */
   traveled: 0,
   speed: 12,
-  /** 0..1 through the Experience section's camera hold (drives the road signs) */
-  expProgress: 0,
   /** the two scenes the camera/sky are between this frame, and how far (0 = all `a`) */
   blend: { a: "", b: "", t: 0 },
   /** screen-space box of the car in CSS px, written by the 3D scene */
