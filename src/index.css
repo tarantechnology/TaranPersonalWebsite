@@ -61,6 +61,19 @@
     --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
 
+    /* Daylight extension: white pages, tan from the car's interior */
+    --paper: #ffffff;
+    --paper-warm: #f4f1ea;
+    --ink: #080808;
+    --ink-soft: #3d3a35;
+    --muted-light: #6b665d;
+    --hairline-light: #e3dfd6;
+    --tan: #c9a97a;
+
+    /* HUD / nav colour follows the section under it (set by the drive engine) */
+    --hud: 240 236 228;
+    --panel: 8 8 8;
+
     /* sidebar (unused but retained) */
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 38 33% 92%;
@@ -78,9 +91,17 @@
     @apply border-border;
   }
 
-  html {
-    scroll-behavior: smooth;
+  html[data-theme="light"] {
+    --hud: 8 8 8;
+    --panel: 255 255 255;
   }
+  html[data-theme="light"] .logo-dark { display: none; }
+  html[data-theme="light"] .logo-light { display: inline-flex; }
+
+  html.lenis, html.lenis body { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+  .lenis.lenis-stopped { overflow: hidden; }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
@@ -159,6 +180,83 @@
     transform: translateX(0);
   }
 
+  /* Holographic panels: translucent, blurred, corner ticks in red */
+  .holo {
+    position: relative;
+    border: 1px solid rgb(var(--hud) / 0.2);
+    background: rgb(var(--panel) / 0.66);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    backdrop-filter: blur(16px) saturate(1.2);
+    transition: background 0.5s var(--ease-out-quint), border-color 0.5s var(--ease-out-quint);
+  }
+  .holo::before, .holo::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 0 solid hsl(var(--primary));
+    pointer-events: none;
+  }
+  .holo::before { left: -1px; top: -1px; border-width: 2px 0 0 2px; }
+  .holo::after { right: -1px; bottom: -1px; border-width: 0 2px 2px 0; }
+  .holo--accent { border-color: hsl(var(--primary) / 0.7); box-shadow: 0 0 32px hsl(var(--primary) / 0.18); }
+  .holo-chip {
+    @apply font-mono text-[10px] tracking-[0.18em] uppercase px-2.5 py-1.5;
+    color: rgb(var(--hud) / 0.75);
+    border: 1px solid rgb(var(--hud) / 0.2);
+    background: rgb(var(--panel) / 0.4);
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .holo-chip:hover { color: rgb(var(--hud)); border-color: hsl(var(--primary) / 0.7); }
+  .holo-chip--accent { color: hsl(var(--primary)); border-color: hsl(var(--primary)); }
+
+
+  /* JARVIS HUD */
+  .hud-num { font-variant-numeric: tabular-nums; color: rgb(var(--hud)); }
+  .hud-scan {
+    position: absolute; left: 0; right: 0; top: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, hsl(var(--primary) / 0.55) 30%, hsl(var(--primary) / 0.55) 70%, transparent 100%);
+    animation: hud-scan 7s linear infinite;
+    opacity: 0.6;
+  }
+  .hud--flicker .hud-text, .hud--flicker .reticle, .hud--flicker .hud-corner { animation: hud-flicker 0.7s steps(2, end) 1; }
+  .reticle { width: 200px; height: 200px; }
+  .reticle__ring { position: absolute; border-radius: 50%; }
+  .reticle__ring--outer { inset: 0; border: 1px dashed rgb(var(--hud) / 0.55); animation: spin 48s linear infinite; }
+  .reticle__ring--inner { inset: 11%; border: 1px solid hsl(var(--primary) / 0.8); border-top-color: transparent; border-bottom-color: transparent; animation: spin 16s linear infinite reverse; box-shadow: 0 0 18px hsl(var(--primary) / 0.25); }
+  .reticle__cross { position: absolute; background: rgb(var(--hud) / 0.5); }
+  .reticle__cross--h { left: 50%; top: -14px; width: 1px; height: 10px; }
+  .reticle__cross--v { top: 50%; left: -14px; width: 10px; height: 1px; }
+  .reticle__tag {
+    position: absolute; left: 100%; top: 8%; margin-left: 14px; white-space: nowrap;
+    @apply font-mono text-[10px] tracking-[0.2em] uppercase;
+    color: hsl(var(--primary));
+    padding-bottom: 4px; border-bottom: 1px solid hsl(var(--primary) / 0.6);
+  }
+  .reticle__tag::before { content: ""; position: absolute; left: -14px; bottom: 0; width: 14px; height: 1px; background: hsl(var(--primary) / 0.6); }
+  .reticle[data-state="hunting"] .reticle__ring--inner { border-color: rgb(var(--hud) / 0.5); border-top-color: transparent; border-bottom-color: transparent; box-shadow: none; }
+  .reticle[data-state="hunting"] .reticle__tag { opacity: 0.4; }
+  .jarvis-line { animation: fade-in 0.25s ease-out both; }
+  .jarvis-caret { display: inline-block; animation: caret 0.9s steps(2, end) infinite; }
+
+  /* Viewfinder chrome */
+  .hud-corner { border-color: rgb(var(--hud)); transition: border-color 0.5s var(--ease-out-quint); }
+  .hud-text {
+    @apply font-mono text-[11px] uppercase tracking-[0.22em];
+    color: rgb(var(--hud));
+    transition: color 0.5s var(--ease-out-quint);
+  }
+  .af-box span { border-color: hsl(var(--primary)); transition: border-color 0.3s, opacity 0.3s; }
+  .af-box[data-state="hunting"] span { border-color: rgb(var(--hud)); opacity: 0.55; }
+  .roll-frame {
+    width: 34px; height: 20px; padding: 0; cursor: none;
+    border: 1px dashed rgb(var(--hud) / 0.45); background: transparent;
+    transition: all 0.3s var(--ease-out-quint);
+  }
+  .roll-frame[data-captured="true"] { background: hsl(var(--crimson)); border-color: hsl(var(--crimson)); }
+  .roll-frame[data-active="true"] { background: rgb(var(--hud)); border: 2px solid hsl(var(--primary)); height: 24px; }
+  .roll-frame:hover { border-color: hsl(var(--primary)); }
+
   .hatch-pattern {
     background-image: repeating-linear-gradient(
       135deg,
@@ -196,6 +294,28 @@
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes hud-scan {
+  0% { top: -2px; }
+  100% { top: 100%; }
+}
+@keyframes hud-flicker {
+  0% { opacity: 1; transform: translateX(0); }
+  20% { opacity: 0.35; transform: translateX(-2px); }
+  40% { opacity: 1; transform: translateX(1px); }
+  60% { opacity: 0.6; transform: translateX(0); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes caret {
+  50% { opacity: 0; }
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse-dot {

@@ -1,87 +1,42 @@
-import DotGridT from "@/components/DotGridT";
-
-const Hero = () => {
-  return (
-    <section id="top" className="relative min-h-screen w-full overflow-hidden">
-      {/* Animated dot grid */}
-      <div className="absolute inset-0">
-        <DotGridT />
-      </div>
-
-      {/* Faint giant T watermark */}
-      <div
-        aria-hidden
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-      >
-        <span className="font-serif font-light text-[58vw] leading-none text-primary/[0.04] select-none">
-          T
-        </span>
-      </div>
-
-      {/* Vignette */}
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse at center, transparent 30%, hsl(var(--background)) 95%)" }}
-      />
-
-      {/* Content */}
-      <div className="container relative z-10 min-h-screen flex flex-col justify-center pt-24 pb-32">
-        <div className="max-w-5xl">
-          <p
-            className="label-mono opacity-0 animate-fade-up"
-            style={{ animationDelay: "0.2s" }}
-          >
-            // Software Engineer · Content Creator · Builder
-          </p>
-
-          <h1
-            className="mt-6 font-serif italic font-light leading-[0.85] text-[clamp(5rem,18vw,18rem)] tracking-[-0.04em] opacity-0 animate-fade-up"
-            style={{ animationDelay: "0.5s" }}
-          >
-            <span className="inline-flex items-baseline gap-[0.18em]">
-              <span>I'm</span>
-            </span>{" "}
-            <span className="text-primary">Taran</span>
-          </h1>
-
-          <p
-            className="mt-8 font-serif italic text-2l md:text-3xl lg:text-4xl text-foreground/90 max-w-3xl text-balance opacity-0 animate-fade-up"
-            style={{ animationDelay: "0.9s" }}
-          >
-            I like to build & create.
-            <br className="hidden sm:block" />
-          </p>
-
-          <div
-            className="mt-14 flex flex-wrap items-center gap-x-8 gap-y-4 opacity-0 animate-fade-up"
-            style={{ animationDelay: "1.2s" }}
-          >
-            <Stat value="400K+" label="Followers" />
-            <Divider />
-            <Stat value="3+" label="Years Experience" />
-            <Divider />
-            <Stat value="10+" label="Projects Shipped" />
-          </div>
-        </div>
-
-        {/* Scroll hint */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
-          <span className="label-mono">Scroll</span>
-          <span className="block h-16 w-px bg-primary origin-top animate-scroll-line" />
-        </div>
-      </div>
-    </section>
-  );
-};
+import { Reveal, Words } from "@/components/drive/Reveal";
 
 const Stat = ({ value, label }: { value: string; label: string }) => (
-  <div>
-    <div className="font-serif text-3xl md:text-4xl text-foreground">{value}</div>
-    <div className="label-mono mt-1">{label}</div>
+  <div className="flex flex-col gap-1.5">
+    <span className="font-serif text-4xl font-light leading-none text-hud md:text-[40px]">{value}</span>
+    <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-hud/60">{label}</span>
   </div>
 );
 
-const Divider = () => <span className="hidden sm:block h-10 w-px bg-border" />;
+const Hero = () => {
+  return (
+    <section id="hero" data-drive data-sky="dawn" data-theme="dark" data-label="Hello" data-clock="05:48" className="relative flex min-h-screen flex-col justify-center pb-24 pt-32 text-hud">
+      <div className="container relative z-10">
+        <div className="max-w-3xl lg:max-w-[46%]">
+          <Reveal as="p" delay={0.2} className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
+            {"// 00 — Hello · 05:48, before sunrise"}
+          </Reveal>
+          <h1 className="mt-7 font-serif font-light leading-[0.85] tracking-[-0.04em] text-[clamp(4.6rem,11vw,10rem)]">
+            <Words text="Hi, I'm Taran." accent="Taran" delay={0.35} />
+          </h1>
+          <Reveal as="p" delay={0.9} className="mt-8 max-w-xl font-serif text-2xl font-light italic leading-[1.15] text-hud/90 md:text-[32px]">
+            I like to build &amp; create. This site is one day's drive, start to finish.
+          </Reveal>
+          <Reveal delay={1.15} className="holo mt-10 inline-flex flex-wrap items-center gap-x-8 gap-y-4 px-6 py-5">
+            <Stat value="400K+" label="Followers" />
+            <span className="hidden h-11 w-px bg-hud/25 sm:block" />
+            <Stat value="3+" label="Years experience" />
+            <span className="hidden h-11 w-px bg-hud/25 sm:block" />
+            <Stat value="10+" label="Projects shipped" />
+          </Reveal>
+        </div>
+      </div>
+
+      <Reveal delay={1.6} className="absolute bottom-10 left-6 z-10 hidden items-center gap-4 md:left-14 md:flex">
+        <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-hud/70">Scroll to drive</span>
+        <span className="block h-px w-16 origin-left bg-primary animate-scroll-line-x" />
+      </Reveal>
+    </section>
+  );
+};
 
 export default Hero;

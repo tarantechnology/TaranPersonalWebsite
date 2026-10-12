@@ -1,106 +1,73 @@
+import { useLayoutEffect, useRef } from "react";
 import { Play } from "lucide-react";
+import { gsap } from "@/lib/motion";
+import { Reveal, Words } from "@/components/drive/Reveal";
 
 const videos = [
-  {
-    views: "7.3M",
-    title: "The Tank PC...",
-    href: "https://www.tiktok.com/@tarantech/video/7171166357948468526?is_from_webapp=1&sender_device=pc&web_id=7601218732539741710",
-    thumbnail: "/tiktok-thumbs/7171166357948468526.jpg",
-  },
-  {
-    views: "250K+",
-    title: "In partnership with @TikTok",
-    href: "https://www.tiktok.com/@tarantech/video/7042403432635845934",
-    thumbnail: "/tiktok-thumbs/7042403432635845934.jpg",
-  },
-  {
-    views: "1.2M",
-    title: "Solid gaming experience overall (sponsored by @NZXT)",
-    href: "https://www.tiktok.com/@tarantech/video/7170008975004519723",
-    thumbnail: "/tiktok-thumbs/7170008975004519723.jpg",
-  },
-  {
-    views: "851K",
-    title: "Latest gaming deals for Intel Gamer Days (sponsored by @Intel Gaming)",
-    href: "https://www.tiktok.com/@tarantech/video/7135925927522979115",
-    thumbnail: "/tiktok-thumbs/7135925927522979115.jpg",
-  },
+  { views: "7.3M", title: "The Tank PC...", href: "https://www.tiktok.com/@tarantech/video/7171166357948468526", thumbnail: "/tiktok-thumbs/7171166357948468526.jpg", focus: true },
+  { views: "250K+", title: "In partnership with TikTok", href: "https://www.tiktok.com/@tarantech/video/7042403432635845934", thumbnail: "/tiktok-thumbs/7042403432635845934.jpg" },
+  { views: "1.2M", title: "Solid gaming experience overall", href: "https://www.tiktok.com/@tarantech/video/7170008975004519723", thumbnail: "/tiktok-thumbs/7170008975004519723.jpg" },
+  { views: "851K", title: "Intel Gamer Days deals", href: "https://www.tiktok.com/@tarantech/video/7135925927522979115", thumbnail: "/tiktok-thumbs/7135925927522979115.jpg" },
 ];
 
 const Content = () => {
+  const strip = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const el = strip.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(el, { x: 60 }, { x: -60, ease: "none", scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: 0.6 } });
+    });
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section id="content" className="relative py-24 md:py-28 bg-background">
+    <section id="content" data-drive data-sky="day" data-theme="light" data-label="Content" data-clock="15:30" className="relative min-h-screen pb-24 pt-32 text-hud">
       <div className="container">
-        <div className="reveal max-w-4xl flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="label-mono">// 04 — Content</p>
-            <h2 className="mt-6 font-serif font-light text-5xl md:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-              Where it all <span className="italic text-primary">started</span>.
+            <Reveal as="p" className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary">{"// 04 — Content · 15:30, light goes warm"}</Reveal>
+            <h2 className="mt-6 font-serif text-5xl font-light leading-[0.95] tracking-tight md:text-6xl lg:text-7xl">
+              <Words text="Where it all started." accent="started" />
             </h2>
           </div>
         </div>
+      </div>
 
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-          {videos.map((v, i) => (
-            <VideoCard key={v.href} {...v} index={i} />
-          ))}
+      <div className="mt-14 overflow-x-clip">
+        <div ref={strip} className="holo mx-auto w-[min(1328px,calc(100%-3rem))] py-3 will-change-transform">
+          <span aria-hidden className="mx-5 block h-2.5" style={{ background: "repeating-linear-gradient(90deg, transparent 0 10px, rgb(var(--hud) / 0.6) 10px 24px, transparent 24px 36px)" }} />
+          <ul className="grid grid-cols-2 gap-3 px-5 py-2.5 md:grid-cols-4 md:gap-4">
+            {videos.map((v, i) => (
+              <Reveal as="li" key={v.href} delay={i * 0.08} y={24}>
+                <a href={v.href} target="_blank" rel="noreferrer" className={`group relative block aspect-[9/16] overflow-hidden bg-surface text-foreground ${v.focus ? "outline outline-2 -outline-offset-2 outline-primary" : ""}`} data-cursor-hover>
+                  <img src={v.thumbnail} alt={v.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.04]" loading="lazy" decoding="async" />
+                  <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                  <span className="absolute left-3.5 top-3.5 font-mono text-[10px] uppercase tracking-[0.2em]">0{i + 1}</span>
+                  <span className="absolute inset-x-3.5 bottom-4 flex flex-col gap-1.5 pr-12">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary">{v.views} views</span>
+                    <span className="font-serif text-lg font-light leading-[1.05] md:text-[22px]">{v.title}</span>
+                  </span>
+                  <span aria-hidden className="absolute bottom-3 right-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary bg-background/50 text-primary backdrop-blur transition-all duration-300 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground">
+                    <Play className="h-3.5 w-3.5 fill-current" />
+                  </span>
+                </a>
+              </Reveal>
+            ))}
+          </ul>
+          <span aria-hidden className="mx-5 block h-2.5" style={{ background: "repeating-linear-gradient(90deg, transparent 0 10px, rgb(var(--hud) / 0.6) 10px 24px, transparent 24px 36px)" }} />
         </div>
+      </div>
 
-        <div className="mt-16 flex justify-center">
-          <a
-            href="https://www.tiktok.com/@tarantech"
-            target="_blank"
-            rel="noreferrer"
-            className="group inline-flex items-center gap-3 font-mono text-xs tracking-[0.22em] uppercase border-b border-primary/40 pb-1 transition-colors duration-300 hover:text-primary hover:border-primary"
-          >
-            View all videos
-            <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-          </a>
-        </div>
+      <div className="container mt-10 flex flex-wrap items-center justify-between gap-6">
+        <a href="https://www.tiktok.com/@tarantech" target="_blank" rel="noreferrer" className="group inline-flex items-center gap-3 border-b border-primary/50 pb-1 font-mono text-[11px] uppercase tracking-[0.22em] transition-colors duration-300 hover:border-primary hover:text-primary" data-cursor-hover>
+          View all videos <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+        </a>
+        <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-hud/60">400K+ followers across TikTok and YouTube</span>
       </div>
     </section>
   );
 };
-
-const VideoCard = ({
-  views, title, href, thumbnail, index,
-}: { views: string; title: string; href: string; thumbnail: string; index: number }) => (
-  <a
-    href={href}
-    target="_blank"
-    rel="noreferrer"
-    className="reveal group relative overflow-hidden rounded-md border border-border/60 bg-background"
-    style={{ transitionDelay: `${index * 80}ms` }}
-    data-cursor-hover
-  >
-    <div className="relative aspect-[9/16] bg-background overflow-hidden">
-      <img
-        src={thumbnail}
-        alt={title}
-        className="absolute inset-0 h-full w-full object-contain bg-background transition-transform duration-500 group-hover:scale-[1.02]"
-        loading="lazy"
-        decoding="async"
-      />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-crimson/30 mix-blend-overlay opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/10" />
-
-      {/* Play button */}
-      <span
-        aria-hidden
-        className="absolute right-3 bottom-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary text-primary bg-background/50 backdrop-blur transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110"
-      >
-        <Play className="h-4 w-4 fill-current" />
-      </span>
-
-      {/* Bottom info overlay */}
-      <div className="absolute inset-x-3 bottom-3 pr-12">
-        <p className="font-mono text-[10px] tracking-[0.16em] uppercase text-primary">{views} views</p>
-        <h3 className="mt-1 font-serif font-light leading-tight text-foreground text-sm md:text-base line-clamp-3">
-          {title}
-        </h3>
-      </div>
-    </div>
-  </a>
-);
 
 export default Content;
