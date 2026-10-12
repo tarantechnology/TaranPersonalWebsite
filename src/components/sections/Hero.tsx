@@ -35,9 +35,6 @@ const Hero = () => {
         <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-hud/70">Scroll to drive</span>
         <span className="block h-px w-16 origin-left bg-primary animate-scroll-line-x" />
       </Reveal>
-      <Reveal delay={1.6} className="absolute bottom-10 right-6 z-10 hidden md:right-14 md:block">
-        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-hud/70">CS @ Georgia Tech · ML @ Snap, summer 2026</p>
-      </Reveal>
     </section>
   );
 };
