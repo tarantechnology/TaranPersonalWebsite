@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { drive, nightness, odometer, onFrame, onSection } from "@/lib/drive";
-import { scrollToId } from "@/lib/motion";
 
 const BOOT_LINES = [
   "TARANTECH OS  //  v2.0",
   "loading driver profile ........ taran puvvala",
-  "loading vehicle ............... po, 2014 cayenne diesel",
+  "loading vehicle ............... po, 2014 porsche cayenne diesel",
   "odometer ...................... 200,148 mi",
   "camera ........................ sony α7 iv, 35mm",
   "sunrise in 3 .. 2 .. 1",
@@ -151,25 +150,15 @@ const Jarvis = () => {
           <span className="text-primary">{meta?.label ?? ""}</span>
         </div>
 
-        <span className="hud-text absolute bottom-[22px] right-14">Frame {frame} / {String(total).padStart(2, "0")}</span>
-
         {/* reticle locked on the car */}
         <div ref={reticle} data-state="locked" className="reticle absolute left-0 top-0 will-change-transform" style={{ opacity: 0 }}>
           <span className="reticle__ring reticle__ring--outer" />
           <span className="reticle__ring reticle__ring--inner" />
           <span className="reticle__cross reticle__cross--h" />
           <span className="reticle__cross reticle__cross--v" />
-          <span className="reticle__tag">Po · 2014 Cayenne Diesel</span>
+          <span className="reticle__tag">Po · 2014 Porsche Cayenne</span>
         </div>
       </div>
-
-      <nav aria-label="Scenes" className="hud fixed bottom-4 left-1/2 z-[56] hidden -translate-x-1/2 items-end gap-1 md:flex">
-        {sections.map((s, i) => (
-          <button key={s.id} type="button" onClick={() => scrollToId(s.id)} aria-label={`Go to ${s.label}`} aria-current={i === section ? "true" : undefined} className="roll-frame" data-active={i === section} data-captured={i < section} data-cursor-hover>
-            <span className="sr-only">{s.label}</span>
-          </button>
-        ))}
-      </nav>
     </>
   );
 };

@@ -4,6 +4,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Html } from "@react-three/drei";
 import CarModel, { CAR_LENGTH } from "./CarModel";
 import Env from "./Env";
+import Scenery from "./Scenery";
 import { drive, lerp, nightness } from "@/lib/drive";
 
 /* ---------- palette per time of day (RGB 0..1) ---------- */
@@ -73,7 +74,8 @@ const Road = () => {
         <planeGeometry args={[900, 900]} />
         <meshStandardMaterial ref={ground} color="#2b1d17" roughness={1} metalness={0} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      {/* the road's centre line sits at z=-2 so the car (at the origin) drives in the right-hand lane */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -2]} receiveShadow>
         <planeGeometry args={[480, 8]} />
         <meshStandardMaterial ref={mat} map={tex} color="#8a7a70" roughness={0.95} metalness={0} />
       </mesh>
@@ -92,7 +94,7 @@ const Sun = () => {
     m.visible = vis > 0.02;
     const scale = 14 + s.golden * 14;
     m.scale.setScalar(scale * Math.max(0.001, vis));
-    m.position.set(150, lerp(10, 14, s.golden) + s.dawn * 4, lerp(40, -30, s.golden));
+    m.position.set(130, lerp(5, 7, s.golden) + s.dawn * 3, lerp(36, -24, s.golden));
     (m.material as THREE.MeshBasicMaterial).opacity = vis;
   });
   return (
@@ -131,16 +133,16 @@ const Stars = () => {
 };
 
 /* ---------- holographic road signs for the Experience scene ---------- */
-const SIGNS = [
-  { range: "2022 — 2023", role: "Research Intern", company: "UNC Wilmington" },
-  { range: "2023", role: "Research Intern", company: "WSPR Lab, NC State" },
-  { range: "2024 — now", role: "Co-Founder", company: "Tabl · AI CAD" },
-  { range: "2024 — now", role: "Lead Researcher", company: "GT CHART Lab" },
-  { range: "2025", role: "SDE Intern", company: "Georgia Tech Research Institute" },
-  { range: "2025", role: "SWE Intern", company: "Pally (YC S25)" },
-  { range: "2026", role: "ML Engineer Intern", company: "Snap Inc.", next: true },
+export const SIGNS = [
+  { range: "Jun 2022 — Nov 2023", role: "Research Intern", company: "UNC Wilmington · Wilmington, NC", body: "Novel method to detect atrial fibrillation in real time. Under Dr. Cuxian Chen & Dr. Yishi Wang." },
+  { range: "May 2023 — Sep 2023", role: "Research Intern", company: "WSPR Lab · Raleigh, NC", body: "Analyzed 250K+ virtual reality privacy concerns under Dr. Anupam Das." },
+  { range: "2024 — Present", role: "Co-Founder", company: "Tabl · AI CAD generation", body: "Text-to-CAD solved. Backed by Christopher Klaus." },
+  { range: "Sep 2024 — Present", role: "Lead Undergraduate Researcher", company: "Georgia Tech CHART Lab · Atlanta, GA", body: "Real-time ML pipelines that make technical cross-collaboration way less painful." },
+  { range: "May 2025 — Jul 2025", role: "SDE Intern", company: "Georgia Tech Research Institute · Huntsville, AL", body: "Performance testing suite for the Air & Missile Defense division." },
+  { range: "Jul 2025 — Sep 2025", role: "Software Engineer Intern", company: "Pally (YC S25) · San Francisco, CA", body: "$1.1M pre-seed. Full-stack, backend, infra and search, whatever was next to my name on the whiteboard." },
+  { range: "May 2026 — Aug 2026", role: "ML Engineer Intern", company: "Snap Inc. · Palo Alto, CA", body: "Summer 2026.", next: true },
 ];
-const SIGN_GAP = 9;
+const SIGN_GAP = 11;
 
 const RoadSigns = () => {
   const group = useRef<THREE.Group>(null);
@@ -159,17 +161,18 @@ const RoadSigns = () => {
   return (
     <group ref={group} visible={false}>
       {SIGNS.map((s, i) => (
-        <group key={s.role + s.range} position={[6 + i * SIGN_GAP, 0, -4.4]}>
-          <mesh position={[0, 1.3, 0]}>
-            <cylinderGeometry args={[0.025, 0.025, 2.6, 6]} />
+        <group key={s.role + s.range} position={[6 + i * SIGN_GAP, 0, -7.2]}>
+          <mesh position={[0, 1.5, 0]}>
+            <cylinderGeometry args={[0.03, 0.03, 3, 6]} />
             <meshBasicMaterial color="#e74c3c" transparent opacity={0.8} />
           </mesh>
           {active && (
-            <Html position={[0, 3.1, 0]} sprite transform distanceFactor={5.5} center zIndexRange={[2, 1]} style={{ pointerEvents: "none" }}>
+            <Html position={[0, 3.6, 0]} sprite transform distanceFactor={6.5} center zIndexRange={[2, 1]} style={{ pointerEvents: "none" }}>
               <div className={`holo-sign ${s.next ? "holo-sign--next" : ""}`}>
                 <span className="holo-sign__range">{s.range}{s.next ? " · next" : ""}</span>
                 <span className="holo-sign__role">{s.role}</span>
                 <span className="holo-sign__co">{s.company}</span>
+                <span className="holo-sign__body">{s.body}</span>
               </div>
             </Html>
           )}
@@ -206,17 +209,22 @@ const Rig = () => {
   useFrame((state, dt) => {
     const cam = camera as THREE.PerspectiveCamera;
     const d = drive.cam;
-    // orbit blends in for the final scene
-    orbitT.current += dt * 0.25;
-    const a = orbitT.current;
-    const ox = Math.cos(a) * 14, oz = Math.sin(a) * 14;
-    const px = lerp(d.pos[0], ox, d.orbit), py = lerp(d.pos[1], 3.4, d.orbit), pz = lerp(d.pos[2], oz, d.orbit);
-    cam.position.x = lerp(cam.position.x, px, 0.06);
-    cam.position.y = lerp(cam.position.y, py, 0.06);
-    cam.position.z = lerp(cam.position.z, pz, 0.06);
-    tmp.look.set(lerp(d.look[0], 0, d.orbit), lerp(d.look[1], 0.7, d.orbit), lerp(d.look[2], 0, d.orbit));
+    // frame-rate independent smoothing
+    const k = 1 - Math.exp(-dt * 4.5);
+    // the last scene sways slowly around the car instead of a full orbit, so the
+    // blend from the previous camera never cuts through the car
+    orbitT.current += dt;
+    const sway = Math.sin(orbitT.current * 0.35) * 0.55 * d.orbit;
+    const cs = Math.cos(sway), sn = Math.sin(sway);
+    const px = d.pos[0] * cs - d.pos[2] * sn;
+    const pz = d.pos[0] * sn + d.pos[2] * cs;
+    const py = d.pos[1];
+    cam.position.x = lerp(cam.position.x, px, k);
+    cam.position.y = lerp(cam.position.y, py, k);
+    cam.position.z = lerp(cam.position.z, pz, k);
+    tmp.look.set(d.look[0], d.look[1], d.look[2]);
     cam.lookAt(tmp.look);
-    const fov = lerp(cam.fov, d.fov, 0.06);
+    const fov = lerp(cam.fov, d.fov, k);
     if (Math.abs(fov - cam.fov) > 0.01) {
       cam.fov = fov;
       cam.updateProjectionMatrix();
@@ -232,7 +240,7 @@ const Rig = () => {
     const g = car.current;
     if (g) {
       g.position.y = Math.sin(state.clock.elapsedTime * 2.1) * 0.008 + Math.sin(drive.traveled * 1.7) * 0.004;
-      g.rotation.z = lerp(g.rotation.z, -(drive.speed - 10) * 0.0006, 0.08);
+      g.rotation.z = lerp(g.rotation.z, -(drive.speed - 10) * 0.0006, k);
     }
 
     const s = sun.current;
@@ -276,6 +284,7 @@ const Rig = () => {
         <ContactShadows position={[0, 0.002, 0]} opacity={0.5} scale={CAR_LENGTH * 2} blur={2} far={2} resolution={512} frames={1} />
       </group>
       <Road />
+      <Scenery />
       <RoadSigns />
       <Sun />
       <Stars />

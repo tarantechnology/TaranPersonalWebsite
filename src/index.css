@@ -212,8 +212,8 @@
 
   /* Road signs rendered inside the 3D world */
   .holo-sign {
-    display: flex; flex-direction: column; gap: 4px;
-    width: 230px; padding: 10px 14px;
+    display: flex; flex-direction: column; gap: 5px;
+    width: 300px; padding: 14px 16px;
     border: 1px solid hsl(var(--primary) / 0.6);
     background: rgba(8, 8, 8, 0.62);
     color: #f0ece4;
@@ -225,6 +225,7 @@
   .holo-sign__range { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: hsl(var(--primary)); }
   .holo-sign__role { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; line-height: 1.05; }
   .holo-sign__co { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(240,236,228,0.6); }
+  .holo-sign__body { margin-top: 4px; font-family: 'Outfit', sans-serif; font-size: 12.5px; line-height: 1.45; color: rgba(240,236,228,0.82); }
 
   /* JARVIS HUD */
   .hud-num { font-variant-numeric: tabular-nums; color: rgb(var(--hud)); }

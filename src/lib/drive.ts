@@ -18,7 +18,7 @@ export const CAMS: Record<string, Cam> = {
   content: { pos: [7, 1.3, -10], look: [0, 1.2, 2.5], fov: 30 },
   blog: { pos: [13, 1.1, 3], look: [-1, 1.3, 3.5], fov: 26 },
   contact: { pos: [-11.5, 2.6, -3], look: [4, 0.6, 3], fov: 30 },
-  po: { pos: [8, 2.6, 7], look: [0, 0.7, 0], fov: 26, orbit: true },
+  po: { pos: [-13, 3.2, -10], look: [0, 0.7, 0], fov: 26, orbit: true },
 };
 
 export type SectionMeta = {

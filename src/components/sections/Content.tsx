@@ -32,9 +32,6 @@ const Content = () => {
               <Words text="Where it all started." accent="started" />
             </h2>
           </div>
-          <Reveal as="p" delay={0.2} className="max-w-sm text-hud/75">
-            The camera roll. Vertical frames on one strip of film; it drifts sideways as you scroll.
-          </Reveal>
         </div>
       </div>
 
@@ -67,7 +64,7 @@ const Content = () => {
         <a href="https://www.tiktok.com/@tarantech" target="_blank" rel="noreferrer" className="group inline-flex items-center gap-3 border-b border-primary/50 pb-1 font-mono text-[11px] uppercase tracking-[0.22em] transition-colors duration-300 hover:border-primary hover:text-primary" data-cursor-hover>
           View all videos <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
         </a>
-        <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-hud/60">Roll 04 · 4 of 400K+ reasons this site exists</span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-hud/60">400K+ followers across TikTok and YouTube</span>
       </div>
     </section>
   );

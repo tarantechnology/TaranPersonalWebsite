@@ -21,9 +21,6 @@ const Projects = () => {
               <Words text="Projects, open-source (mostly)." accent="open-source" />
             </h2>
           </div>
-          <Reveal as="p" delay={0.2} className="max-w-sm text-hud/75">
-            A contact sheet. Every project is a frame on the roll. Hover one to pull it into focus.
-          </Reveal>
         </div>
 
         <ul className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
