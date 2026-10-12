@@ -142,21 +142,37 @@ export const SIGNS = [
   { range: "Jul 2025 — Sep 2025", role: "Software Engineer Intern", company: "Pally (YC S25) · San Francisco, CA", body: "$1.1M pre-seed. Full-stack, backend, infra and search, whatever was next to my name on the whiteboard." },
   { range: "May 2026 — Aug 2026", role: "ML Engineer Intern", company: "Snap Inc. · Palo Alto, CA", body: "Summer 2026.", next: true },
 ];
-const SIGN_GAP = 11;
+const SIGN_GAP = 16;
+const SIGN_SPAWN = 28; // road units ahead of the car where the first sign appears
+const SIGN_GONE = -26; // behind the car, where a sign is out of frame
 
+/**
+ * The signs stand on the road and ride with it (same `traveled` the asphalt
+ * and the poles use), so the car drives past them. They spawn ahead when
+ * the Experience section starts and re-arm if you scroll back above it.
+ */
 const RoadSigns = () => {
   const group = useRef<THREE.Group>(null);
   const [active, setActive] = useState(false);
+  const start = useRef<number | null>(null);
   useFrame(() => {
     const g = group.current;
     if (!g) return;
-    const on = drive.expProgress > 0.001 && drive.expProgress < 0.999 && drive.section === 2;
+    if (drive.section < 2) start.current = null;
+    if (drive.section === 2 && start.current === null) start.current = drive.traveled;
+    let anyVisible = false;
+    if (start.current !== null) {
+      const travel = drive.traveled - start.current;
+      g.children.forEach((child, i) => {
+        const x = SIGN_SPAWN + i * SIGN_GAP - travel;
+        child.position.x = x;
+        child.visible = x > SIGN_GONE && x < SIGN_SPAWN + 1;
+        if (child.visible) anyVisible = true;
+      });
+    }
+    const on = start.current !== null && anyVisible;
     if (on !== active) setActive(on);
     g.visible = on;
-    const travel = drive.expProgress * (SIGNS.length * SIGN_GAP + 10);
-    g.children.forEach((child, i) => {
-      child.position.x = 6 + i * SIGN_GAP - travel;
-    });
   });
   return (
     <group ref={group} visible={false}>
