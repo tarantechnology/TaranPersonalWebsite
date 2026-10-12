@@ -6,7 +6,7 @@ const projects = [
   { n: "02", meta: "", title: "AI-driven financial market anomaly detector", body: "XGBoost detector on 1M+ market datapoints with a PCA and RFE inference pipeline, deployed via Next.js.", tags: ["XGBoost", "scikit-learn", "Next.js"], href: "https://github.com/tarantechnology/MarketAnomalyDetection" },
   { n: "03", meta: "In focus", title: "Tabl, AI CAD generation", body: "Containerized text-to-CAD pipeline for 500+ concurrent generations and a multi-stage RAG system over 15K+ CAD docs.", tags: ["React", "AWS", "Three.js"], href: "https://www.trytabl.ai/", focus: true },
   { n: "04", meta: "HackMIT", title: "AI executive assistant agent", body: "iMessage-accessible GPT agent with LangChain orchestration and per-user knowledge graphs from Gmail, Outlook and Notion.", tags: ["LangChain", "MCP", "Neo4j"], href: "https://github.com/ProdText" },
-  { n: "05", meta: "HackGT", title: "MacTrack, AI meal & macro tracker", body: "React Native app that scans meals with GPT-4o, on a Flask and MongoDB backend for fast logging and sync.", tags: ["React Native", "Flask", "GPT-4o"], href: "https://github.com/tarantechnology/mactrack" },
+  { n: "05", meta: "2026", title: "Sideby, Netflix with a friend", body: "Chrome extension that syncs Netflix, Disney+ and Hulu playback across two accounts, with a WebRTC camera that floats over the movie. Never screen-shares or touches the stream; it only syncs the clocks.", tags: ["TypeScript", "Chrome MV3", "WebRTC", "WebSockets"], href: "https://github.com/tarantechnology/SideBy" },
   { n: "06", meta: "Unexposed", title: "More on the roll.", body: "More shipped work across ML, infra and product lives on GitHub.", tags: ["@tarantechnology"], href: "https://github.com/tarantechnology", more: true },
 ];
 
