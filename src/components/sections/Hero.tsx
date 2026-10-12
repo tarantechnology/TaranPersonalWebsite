@@ -1,12 +1,5 @@
 import { Reveal, Words } from "@/components/drive/Reveal";
 
-const Stat = ({ value, label }: { value: string; label: string }) => (
-  <div className="flex flex-col gap-1.5">
-    <span className="font-serif text-4xl font-light leading-none text-hud md:text-[40px]">{value}</span>
-    <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-hud/60">{label}</span>
-  </div>
-);
-
 const Hero = () => {
   return (
     <section id="hero" data-drive data-sky="dawn" data-theme="dark" data-label="Hello" data-clock="05:48" className="relative flex min-h-screen flex-col justify-center pb-24 pt-32 text-hud">
@@ -20,13 +13,6 @@ const Hero = () => {
           </h1>
           <Reveal as="p" delay={0.9} className="mt-8 max-w-xl font-serif text-2xl font-light italic leading-[1.15] text-hud/90 md:text-[32px]">
             I like to build &amp; create. This site is one day's drive, start to finish.
-          </Reveal>
-          <Reveal delay={1.15} className="holo mt-10 inline-flex flex-wrap items-center gap-x-8 gap-y-4 px-6 py-5">
-            <Stat value="400K+" label="Followers" />
-            <span className="hidden h-11 w-px bg-hud/25 sm:block" />
-            <Stat value="3+" label="Years experience" />
-            <span className="hidden h-11 w-px bg-hud/25 sm:block" />
-            <Stat value="10+" label="Projects shipped" />
           </Reveal>
         </div>
       </div>

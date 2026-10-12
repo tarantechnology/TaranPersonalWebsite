@@ -15,7 +15,7 @@ const About = () => {
         <div className="lg:col-span-6">
           <Reveal as="p" className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary">{"// 01 — About · 07:40, sun's up"}</Reveal>
           <h2 className="mt-6 font-serif text-5xl font-light leading-[0.95] tracking-tight md:text-6xl lg:text-7xl">
-            <Words text="Same curiosity, different output." accent="output" />
+            <Words text="Hi again." accent="again" />
           </h2>
           <Reveal delay={0.1} className="holo mt-10 max-w-2xl space-y-5 p-6 text-[17px] leading-relaxed text-hud/80 md:p-8">
             <p>
